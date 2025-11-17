@@ -1,0 +1,106 @@
+ZCARDS SOFTWARE LICENSE AGREEMENT (EULA) Version 1.0 — © Zaptian
+
+IMPORTANT: PLEASE READ THIS SOFTWARE LICENSE AGREEMENT CAREFULLY BEFORE
+INSTALLING OR USING THIS SOFTWARE. BY INSTALLING, COPYING, OR OTHERWISE
+USING ZCARDS (“THE SOFTWARE”), YOU AGREE TO BE BOUND BY THE TERMS OF
+THIS AGREEMENT. IF YOU DO NOT AGREE, DO NOT INSTALL OR USE THE SOFTWARE.
+
+1.  GRANT OF LICENSE Subject to the terms of this Agreement, Zaptian
+    grants you a non-exclusive, non-transferable, revocable license to
+    install and use one copy of ZCards on a single Windows device for
+    your personal or business use. This license does not transfer
+    ownership of the software to you. Each purchase of ZCards permits
+    use on one (1) device, unless otherwise stated in your purchase or
+    license key documentation.
+
+2.  LICENSE RESTRICTIONS You may not, without written permission from
+    Zaptian:
+
+-   Modify, decompile, reverse-engineer, or disassemble the Software.
+-   Remove or alter any product identification, copyright notices, or
+    branding.
+-   Rent, lease, sell, sublicense, distribute, or transfer the Software
+    to others.
+-   Use the Software for any illegal, harmful, or unauthorized purpose.
+-   Circumvent license enforcement, activation systems, or subscription
+    mechanisms.
+-   Use the Software in a manner that exceeds the authorized number of
+    users or devices.
+
+Any unauthorized use of the Software is strictly prohibited and may
+result in legal action.
+
+3.  OWNERSHIP ZCards is owned and copyrighted by Zaptian. The Software
+    is licensed, not sold. All rights not expressly granted in this
+    Agreement are reserved by Zaptian.
+
+4.  UPDATES, UPGRADES & AUTO-UPDATES Zaptian may provide updates,
+    patches, or upgrades to the Software.
+
+-   Updates may install automatically if enabled by the user.
+-   Updates may include feature enhancements, bug fixes, or security
+    patches.
+-   Zaptian has no obligation to provide updates beyond the purchased
+    version or subscription period.
+
+5.  SUPPORT Paid users may receive technical support as described on the
+    Zaptian website or purchase confirmation. Zaptian is not obligated
+    to provide support if:
+
+-   The software was modified by the user
+-   Used in unsupported environments
+-   Used contrary to this license agreement
+
+6.  DATA COLLECTION The Software may collect limited, non-personal
+    technical information necessary for:
+
+-   License validation
+-   Auto-update functionality
+-   Error reporting
+-   Performance improvement
+
+Zaptian does not collect personal identification unless voluntarily
+provided by the user. Collected data is never sold or shared with third
+parties except where required by law.
+
+7.  TERMINATION This license may be terminated if:
+
+-   You fail to comply with the terms of this Agreement
+-   You attempt to bypass license controls
+-   Payment for the Software is reversed, refunded, or disputed
+
+Upon termination: - You must discontinue use of the Software - You must
+uninstall and delete all copies - Your license key may be disabled
+
+8.  DISCLAIMER OF WARRANTY THE SOFTWARE IS PROVIDED “AS IS” WITHOUT
+    WARRANTY OF ANY KIND. ZAPTIAN DISCLAIMS ALL WARRANTIES, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO:
+
+-   Merchantability
+-   Fitness for a particular purpose
+-   Non-infringement
+-   Performance guarantees
+
+You assume all responsibility for use of the Software.
+
+9.  LIMITATION OF LIABILITY In no event shall Zaptian be liable for:
+
+-   Loss of business or profits
+-   Data loss or corruption
+-   Special, incidental, or consequential damages
+-   Any damages exceeding the amount you paid for the Software
+
+Some jurisdictions do not allow limited liability; if so, the minimum
+legally permitted limit applies.
+
+10. GOVERNING LAW This Agreement is governed by the laws of your country
+    or region of residence unless otherwise required by local law. Any
+    disputes shall be resolved exclusively through legal channels in the
+    jurisdiction where Zaptian operates.
+
+11. ENTIRE AGREEMENT This EULA constitutes the complete agreement
+    between you and Zaptian regarding the Software and overrides any
+    prior agreements or representations.
+
+12. CONTACT INFORMATION Zaptian – ZCards Licensing Department 
+    Email: support@zaptian.com Website: www.zaptian.com

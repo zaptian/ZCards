@@ -1,0 +1,65 @@
+{
+  "name": "zaptian-id-designer",
+  "version": "1.0.1",
+  "description": "Zaptian ID Designer – Windows ID Card Design Tool",
+  "author": "Zaptian",
+  "license": "MIT",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electronmon .",
+    "build": "electron-builder --win --x64",
+    "publish": "electron-builder --win --x64 --publish always"
+  },
+  "dependencies": {
+    "electron-log": "^4.4.7",
+    "electron-store": "^9.0.0",
+    "electron-updater": "^6.1.8",
+    "dotenv": "^17.2.3",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "electron": "37.0.0",
+    "electron-builder": "^25.1.8",
+    "electronmon": "^2.0.4"
+  },
+  "build": {
+    "appId": "com.zaptian.iddesigner",
+    "productName": "Zaptian ID Designer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/Images/logo_512.ico",
+      "artifactName": "${productName}-Setup-${version}-${arch}.${ext}",
+      "requestedExecutionLevel": "asInvoker",
+      "compression": "maximum"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "zaptian",
+        "repo": "ZCards",
+        "releaseType": "release"
+      }
+    ],
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Zaptian ID Designer",
+      "installerIcon": "assets/Images/logo_512.ico",
+      "uninstallerIcon": "assets/Images/logo_512.ico",
+      "installerHeaderIcon": "assets/Images/logo_512.ico",
+      "license": "assets/LICENSE.txt"
+    }
+  }
+}

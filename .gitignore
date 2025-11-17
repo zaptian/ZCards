@@ -1,0 +1,70 @@
+# ---------------------------------------------------------
+# ZCards - Zaptian Team (.gitignore)
+# Optimized for Windows-only Electron Builder + NSIS setup
+# ---------------------------------------------------------
+
+# Node modules
+node_modules/
+
+# Build output
+dist/
+out/
+build/
+
+# Electron Builder cache / artifacts
+*.exe
+*.msi
+*.zip
+*.7z
+*.dmg
+*.AppImage
+*.blockmap
+latest.yml
+latest.json
+
+# Windows installer files
+*.nupkg
+*.nsis.7z
+*.nsis.zip
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Environment variables
+.env
+.env.*
+*.local
+
+# VSCode settings
+.vscode/
+.history/
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# TypeScript build artifacts
+*.tsbuildinfo
+
+# Electron runtime / cache
+.cache/
+electron-profile/
+electron-builder.yml
+# (uncomment above if you auto-generate your builder config)
+
+# Optional: IDE files
+.idea/
+*.iml
+
+# Auto-update related artifacts
+__update/
