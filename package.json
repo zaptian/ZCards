@@ -4,24 +4,37 @@
   "description": "Zaptian ID Designer – Windows ID Card Design Tool",
   "author": "Zaptian",
   "license": "MIT",
-  "main": "src/main.js",
+  "main": "electron/main.js",
+  "type": "module",
   "scripts": {
-    "start": "electron .",
-    "dev": "electronmon .",
+    "start": "concurrently \"npm run electron:dev\" \"npm run vite\"",
+    "electron:dev": "electronmon electron/main.js",
+    "dev": "electronmon electron/main.js",
+    "vite": "vite",
+    "build_vite": "vite build",
     "build": "electron-builder --win --x64",
     "publish": "electron-builder --win --x64 --publish always"
   },
   "dependencies": {
+    "dotenv": "^17.2.3",
     "electron-log": "^4.4.7",
     "electron-store": "^9.0.0",
     "electron-updater": "^6.1.8",
-    "dotenv": "^17.2.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.10.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "electron": "37.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.4.0",
+    "concurrently": "^9.2.1",
+    "electron": "^37.10.0",
     "electron-builder": "^25.1.8",
-    "electronmon": "^2.0.4"
+    "electronmon": "^2.0.4",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.18",
+    "vite": "^7.2.2"
   },
   "build": {
     "appId": "com.zaptian.iddesigner",
@@ -30,12 +43,23 @@
       "output": "dist"
     },
     "files": [
-      "src/**/*",
-      "assets/**/*",
-      "package.json"
+      "public/**/*",
+      "out/**/*",
+      "electron/**/*",
+      "!/*.map",
+      "!/*.ts",
+      "!/_tests_",
+      "!/*.md",
+      "!node_modules//*.{md,ts,map}",
+      "!node_modules//test",
+      "!node_modules//example",
+      "!node_modules//demo",
+      "!/node_modules//test/*",
+      "!/node_modules//examples/*",
+      "!/node_modules//demo/*"
     ],
     "win": {
-      "icon": "assets/Images/logo_512.ico",
+      "icon": "public/assets/Logo/logo_512.ico",
       "artifactName": "${productName}-Setup-${version}-${arch}.${ext}",
       "requestedExecutionLevel": "asInvoker",
       "compression": "maximum"
@@ -56,10 +80,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Zaptian ID Designer",
-      "installerIcon": "assets/Images/logo_512.ico",
-      "uninstallerIcon": "assets/Images/logo_512.ico",
-      "installerHeaderIcon": "assets/Images/logo_512.ico",
-      "license": "assets/LICENSE.txt"
+      "installerIcon": "public/assets/Logo/logo_512.ico",
+      "uninstallerIcon": "public/assets/Logo/logo_512.ico",
+      "installerHeaderIcon": "public/assets/Logo/logo_512.ico",
+      "license": "public/License/LICENSE.txt"
     }
   }
 }
