@@ -1,6 +1,5 @@
 const CustomImage = ({
   src,
-  alt = "",
   width = "100px",
   height = "100px",
   frameClassNmae = "",

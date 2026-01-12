@@ -7,7 +7,7 @@ import {
 import PreviewBackground from "@/Components/PreviewBackground";
 import CustomButton from "@/Components/CustomButton";
 import { new_design_img } from "@/Utils/img_render";
-import CutsomLabel from "@/Components/CutsomLabel";
+import CustomLabel from "@/Components/CustomLabel";
 import CustomImage from "@/Components/CustomImage";
 import CustomInput from "@/Components/CustomInput";
 
@@ -168,6 +168,7 @@ const NewDesigner = () => {
           </div>
         ) : null}
       </div>
+      
       {/* Inside Preview */}
 
       {/* Menu */}
@@ -246,7 +247,7 @@ const NewDesigner = () => {
                   }
                 />
               </div>
-              <CutsomLabel
+              <CustomLabel
                 label_text={`${Number(Number(zoom.toFixed(1)) * 100).toFixed(
                   0
                 )}%`}

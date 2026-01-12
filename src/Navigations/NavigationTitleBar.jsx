@@ -13,7 +13,7 @@ const NavigationTitleBar = ({ isExpanded, setIsExpanded }) => {
   }, []);
 
   return (
-    <div className="title-bar flex flex-row bg-white">
+    <div className="title-bar flex flex-row bg-light-card dark:bg-dark-card">
       {/* Header Section */}
       <div className="flex flex-row items-center gap-[20px]">
         {/* Logo */}
@@ -23,10 +23,10 @@ const NavigationTitleBar = ({ isExpanded, setIsExpanded }) => {
 
         {/* SideBar Expander */}
         <div
-          className="expand-block w-[36px] h-[36px] bg-white hover:bg-gray-100 rounded-[8px] flex justify-center items-center pt-[9px] p-[5px]"
+          className="expand-block w-[36px] h-[36px] bg-light-card hover:bg-light-active dark:bg-dark-card dark:hover:bg-dark-text rounded-[8px] flex justify-center items-center pt-[9px] p-[5px]"
           onClick={toggleNav}
         >
-          <div className="text-icon-bg w-6 h-6">
+          <div className="text-icon-bg dark:text-icon_dark-bg w-6 h-6">
             {!isExpanded ? (
               <svg
                 viewBox="0 0 100 100"
@@ -65,7 +65,7 @@ const NavigationTitleBar = ({ isExpanded, setIsExpanded }) => {
             height="10"
             viewBox="0 0 62 62"
             fill="currentColor"
-            className="resizer-img"
+            className="resizer-img dark:text-dark-text"
             alt="minimize"
             xmlns="http://www.w3.org/2000/svg"
           >
@@ -73,7 +73,7 @@ const NavigationTitleBar = ({ isExpanded, setIsExpanded }) => {
           </svg>
         </div>
         <div
-          className="resizer-block flex-box-row clean-ex-pad cent-box"
+          className="resizer-block dark:text-dark-text flex-box-row clean-ex-pad cent-box"
           onClick={() => window.electronAPI.maximize()}
         >
           {isMaximized ? (
@@ -144,7 +144,7 @@ const NavigationTitleBar = ({ isExpanded, setIsExpanded }) => {
             height="10"
             viewBox="0 0 62 62"
             fill="currentColor"
-            className="resizer-img-close"
+            className="resizer-img-close dark:text-dark-text"
             alt="close"
             xmlns="http://www.w3.org/2000/svg"
           >

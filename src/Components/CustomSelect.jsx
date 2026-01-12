@@ -24,7 +24,9 @@ const CustomSelect = ({ options, placeholder, onChange }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-2 text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
-        <span className="font-bold text-gray-700">{selected ? selected.label : placeholder}</span>
+        <span className="font-bold text-gray-700">
+          {selected ? selected.label : placeholder}
+        </span>
         <span
           className={`transform transition-transform ${
             isOpen ? "rotate-180" : ""

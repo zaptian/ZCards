@@ -1,28 +1,38 @@
 const CustomButton = ({
   label = "",
-  label_style = "",
-  button_style = "",
-  img_src = null, // React component (SVG)
-  img_style = "",
+  iconSrc = null,
+  iconSize = "w-[24px] h-[24px]",
   onClick = () => {},
+  disabled = false,
+  textColor = "",
+  btn_animation = "",
+  icon_animation = "",
+  btn_bg_color = "",
 }) => {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`flex items-center gap-2 cursor-pointer
-                  transition-all duration-150
-                  hover:drop-shadow-[0_0_4px_rgba(64,64,64,0.4)]
-                  ${button_style}`}
+      disabled={disabled}
+      className={`group ${btn_bg_color}  ${textColor} flex items-center justify-center transform transition-all duration-300 ease-in-out ${btn_animation}`}
     >
-      {/* Render SVG */}
-      {img_src && (
-        <div style={img_style} className={`flex items-center justify-center`}>
-          {img_src}
-        </div>
+      {/* Icon  */}
+      {iconSrc && (
+        <span
+          className={`${iconSize} transform transition-transform duration-200 ease-in-out ${icon_animation}`}
+        >
+          {iconSrc}
+        </span>
       )}
 
       {/* Label */}
-      {label && <span className={`${label_style}`}>{label}</span>}
+      {label && (
+        <span
+          className={`transform transition-transform duration-200 ease-in-out group-hover:${btn_animation}`}
+        >
+          {label}
+        </span>
+      )}
     </button>
   );
 };

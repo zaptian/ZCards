@@ -5,6 +5,9 @@ import Store from "electron-store";
 const { autoUpdater } = pkg;
 import { fileURLToPath } from "url";
 
+// Import all IPC handler modules:
+import DataDashBoardHandler from "./ipc/DataDashBoardHandler.js";
+
 // Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,11 +25,11 @@ async function MainWindow() {
   const windowCreation = new BrowserWindow({
     ...windowBounds,
     minWidth: 1200,
-    minHeight: 800,
+    minHeight: 762,
     frame: false,
     backgroundColor: "#181818",
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "preload", "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
@@ -44,7 +47,6 @@ async function MainWindow() {
     windowCreation.loadURL("http://localhost:5173/");
     windowCreation.webContents.openDevTools();
   } else {
-    console.log("working", __dirname);
     windowCreation.loadFile(path.join(__dirname, "..", "out", "index.html"));
   }
 
@@ -58,7 +60,7 @@ async function MainWindow() {
   });
 
   /* Open Developer Tools */
-  windowCreation.webContents.openDevTools();
+  // windowCreation.webContents.openDevTools();
 
   /* IPCMain Control */
   ipcMain.on("window-minimize", () => windowCreation.minimize());
@@ -130,6 +132,9 @@ autoUpdater.on("update-downloaded", () => {
 /* Application Ready Stage */
 app.whenReady().then(async () => {
   await MainWindow();
+
+  // Register all IPC handlers here:
+  await DataDashBoardHandler();
 });
 
 /* Application Close Stage */

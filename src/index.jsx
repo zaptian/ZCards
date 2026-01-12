@@ -1,14 +1,16 @@
 import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import { HashRouter } from "react-router-dom";
-
+import { ToastProvider } from "./Components/ToastMessage/ToastContext";
 import "./styles/index.css";
 import Templete from "./Templete";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <HashRouter>
-      <Templete />
+      <ToastProvider>
+        <Templete />
+      </ToastProvider>
     </HashRouter>
   </StrictMode>
 );

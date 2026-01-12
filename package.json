@@ -1,6 +1,6 @@
 {
   "name": "zaptian-id-designer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Zaptian ID Designer – Windows ID Card Design Tool",
   "author": "Zaptian",
   "license": "MIT",
@@ -8,8 +8,8 @@
   "type": "module",
   "scripts": {
     "start": "concurrently \"npm run electron:dev\" \"npm run vite\"",
-    "electron:dev": "electronmon electron/main.js",
-    "dev": "electronmon electron/main.js",
+    "electron:dev": "electronmon electron/main.js .",
+    "dev": "electronmon .",
     "vite": "vite",
     "build_vite": "vite build",
     "build": "electron-builder --win --x64",
@@ -20,10 +20,13 @@
     "electron-log": "^4.4.7",
     "electron-store": "^9.0.0",
     "electron-updater": "^6.1.8",
+    "mime-types": "^3.0.2",
+    "node-fetch": "^3.3.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.10.1",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.0.0",

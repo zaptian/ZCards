@@ -21,7 +21,7 @@ const NavigationRoutes = () => {
       <Route path="/design/my" element={<MyDesign />} />
 
       <Route path="/data" element={<DataDashboard />} />
-      <Route path="/data/edit" element={<DataEditor />} />
+      <Route path="/data/edit/:fileId" element={<DataEditor />} />
       <Route path="/data/import" element={<DataImport />} />
 
       <Route path="/print" element={<PrintCard />} />

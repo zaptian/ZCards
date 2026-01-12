@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import NavigationSubMenu from "./NavigationSubMenu";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   navigation_bottom_icon,
   navigation_dataoptions,
@@ -24,6 +23,7 @@ function toggleTheme(options) {
 
 const NavigationItems = ({ isExpanded, setIsExpanded }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [navsel, setnavsel] = useState("Home");
   const [subnavSelected, setSubNavSelected] = useState("");
@@ -35,7 +35,46 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
     designer: null,
     data_control: null,
   };
-  
+
+  useEffect(() => {
+    const path = location.pathname;
+
+    // MAIN NAV
+    const mainNav = navigation_icon.find((item) => path === item.path);
+
+    if (mainNav) {
+      setnavsel(mainNav.label);
+      setSubNavSelected("");
+    }
+
+    // DESIGNER SUBMENU
+    const designerSub = navigation_designoptions.find(
+      (item) => path === item.path
+    );
+
+    if (designerSub) {
+      setnavsel("Designer");
+      setSubNavSelected(designerSub.label);
+      return;
+    }
+
+    // DATA CONTROL SUBMENU
+    const dataSub = navigation_dataoptions.find((item) =>
+      path.startsWith(item.matchPath)
+    );
+    if (dataSub) {
+      setnavsel("Data Control");
+      setSubNavSelected(dataSub.label);
+      return;
+    }
+
+    // SETTINGS
+    if (path === navigation_bottom_icon.settings.path) {
+      setnavsel(navigation_bottom_icon.settings.label);
+      setSubNavSelected("");
+    }
+  }, [location.pathname]);
+
   useEffect(() => {
     const applyTheme = async () => {
       await toggleTheme(ThemeMode);
@@ -72,7 +111,7 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
       <header
         className={`${
           isExpanded ? "nav-expanded" : "nav-shrink"
-        } flex-box-col bg-white`}
+        } flex-box-col bg-light-card dark:bg-dark-card`}
         id="Navbar"
       >
         {/* Top Navigation */}
@@ -92,9 +131,7 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
                 }
               }}
               onClick={() => {
-                setnavsel(nav_item.label);
                 navigate(nav_item.path);
-                setSubNavSelected(nav_item.label);
               }}
             >
               <div
@@ -113,13 +150,13 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
                 } `}
               >
                 {/* Navigation Icon */}
-                <div className="nav-icon-box w-5 h-5 text-icon-bg">
+                <div className="nav-icon-box w-5 h-5 text-icon-bg dark:text-icon_dark-bg">
                   {nav_item.icon}
                 </div>
 
                 {/* Navigation Label */}
                 {isExpanded && (
-                  <div className="nav-block-name text-icon-seleceted_text">
+                  <div className="nav-block-name text-icon-seleceted_text dark:text-icon_dark-bg">
                     {nav_item.label}
                   </div>
                 )}
@@ -139,7 +176,8 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
                   : "top-[116px] left-[56px]"
               }
               ${showDesignerMenu ? "flex" : "hidden"}
-              flex-col bg-white
+              flex-col bg-light-card2 dark:bg-dark-card2 
+              border-[1px] border-light-border dark:border-dark-border
               shadow-xl rounded-[10px] p-[6px]
               w-[200px] z-50 gap-[2px]
             `}
@@ -157,14 +195,13 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
                     : null
                 } `}
                 onClick={() => {
-                  console.log(sub_menu.label, sub_menu.path);
-                  setnavsel("Designer");
-                  setSubNavSelected(sub_menu.label);
                   navigate(sub_menu.path);
                 }}
               >
-                <div className="w-5 h-5 text-icon-bg">{sub_menu.icon}</div>
-                <div className="nav-block-name text-icon-seleceted_text ">
+                <div className="w-5 h-5 text-icon-bg dark:text-icon_dark-bg">
+                  {sub_menu.icon}
+                </div>
+                <div className="nav-block-name text-icon-seleceted_text dark:text-icon_dark-bg">
                   {sub_menu.label}
                 </div>
               </div>
@@ -183,7 +220,8 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
                   : "top-[166px] left-[56px]"
               }
               ${showDataManagerMenu ? "flex" : "hidden"}
-              flex-col bg-white
+              flex-col bg-light-card2 dark:bg-dark-card2 
+              border-[1px] border-light-border dark:border-dark-border
               shadow-xl rounded-[10px] p-[6px]
               w-[200px] z-50 gap-[2px]
             `}
@@ -201,14 +239,13 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
                     : null
                 } `}
                 onClick={() => {
-                  console.log(sub_menu.label, sub_menu.path);
-                  setnavsel("Data Control");
-                  setSubNavSelected(sub_menu.label);
                   navigate(sub_menu.path);
                 }}
               >
-                <div className="w-5 h-5 text-icon-bg">{sub_menu.icon}</div>
-                <div className="nav-block-name text-icon-seleceted_text ">
+                <div className="w-5 h-5 text-icon-bg dark:text-icon_dark-bg">
+                  {sub_menu.icon}
+                </div>
+                <div className="nav-block-name text-icon-seleceted_text dark:text-icon_dark-bg">
                   {sub_menu.label}
                 </div>
               </div>
@@ -240,7 +277,7 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
                   isExpanded ? null : "hover:bg-gray-300 p-2 rounded-lg"
                 }  transition`}
               >
-                <div className="nav-icon-box w-5 h-5 text-icon-bg">
+                <div className="nav-icon-box w-5 h-5 text-icon-bg dark:text-icon_dark-bg">
                   {ThemeMode
                     ? navigation_bottom_icon.dark_theme.icon
                     : navigation_bottom_icon.light_theme.icon}
@@ -248,7 +285,7 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
               </div>
 
               {isExpanded && (
-                <div className="nav-block-name ml-3">
+                <div className="nav-block-name ml-3 text-icon-seleceted_text dark:text-icon_dark-bg">
                   {ThemeMode
                     ? navigation_bottom_icon.dark_theme.label
                     : navigation_bottom_icon.light_theme.label}
@@ -275,18 +312,19 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
                 }
               `}
               onClick={() => {
-                setnavsel(navigation_bottom_icon.settings.label);
                 navigate(navigation_bottom_icon.settings.path);
               }}
             >
               <div>
-                <div className={`nav-icon-box w-5 h-5 text-icon-bg  `}>
+                <div
+                  className={`nav-icon-box w-5 h-5 text-icon-bg dark:text-icon_dark-bg`}
+                >
                   {navigation_bottom_icon.settings.icon}
                 </div>
               </div>
 
               {isExpanded && (
-                <div className="nav-block-name">
+                <div className="nav-block-name text-icon-seleceted_text dark:text-icon_dark-bg">
                   {navigation_bottom_icon.settings.label}
                 </div>
               )}
