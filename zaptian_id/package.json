@@ -1,0 +1,60 @@
+{
+  "name": "zaptian_id",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Zaptian ID App",
+  "author": "Team Zaptian",
+  "main": "electron/main.js",
+    "type": "module",
+
+  "scripts": {
+    "dev-web": "vite",
+    "dev": "concurrently \"vite\" \"cross-env VITE_DEV_SERVER_URL=http://localhost:5173 APP_MODE=dev electron .\"",
+    "build": "vite build",
+    "start": "electron .",
+    "dist": "electron-builder --win --x64",
+    "electron:build": "electron-builder"
+  },
+  "build": {
+    "files": [
+      "build/**/*",
+      "electron/**/*",
+      "!**/*.map",
+      "!**/*.ts",
+      "!**/__tests__",
+      "!**/*.md",
+      "!node_modules/**/*.{md,ts,map}",
+      "!node_modules/**/test",
+      "!node_modules/**/example",
+      "!node_modules/**/demo",
+      "!**/node_modules/*/test/**",
+      "!**/node_modules/*/examples/**",
+      "!**/node_modules/*/demo/**"
+    ],
+    "asar": true,
+    "asarUnpack": [],
+    "extraResources": [],
+    "publish": null
+  },
+  "dependencies": {
+    "electron-store": "^11.0.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.10.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.1",
+    "electron-builder": "^26.0.12",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "vite": "^7.2.2"
+  }
+}
