@@ -3,7 +3,7 @@ import ToastStack from "./ToastStack";
 
 const ToastContext = createContext(null);
 
-const MAX_TOASTS = 5;
+const MAX_TOASTS = 3;
 const TOAST_DURATION = 3000;
 
 export const ToastProvider = ({ children }) => {
@@ -24,7 +24,7 @@ export const ToastProvider = ({ children }) => {
 
       setTimeout(() => removeToast(id), TOAST_DURATION);
     },
-    [removeToast]
+    [removeToast],
   );
 
   return (

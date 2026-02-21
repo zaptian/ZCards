@@ -3,7 +3,7 @@ const CustomInput = ({
   useRef,
   input_classname = "",
   input_placeholder = "",
-  search_text,
+  search_text = "",
   onChange_Access,
 }) => {
   return (

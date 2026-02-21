@@ -29,7 +29,7 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
   const [subnavSelected, setSubNavSelected] = useState("");
   const [showDesignerMenu, setShowDesignerMenu] = useState(false);
   const [showDataManagerMenu, setshowDataManagerMenu] = useState(false);
-  const [ThemeMode, setThemeMode] = useState(true);
+  const [ThemeMode, setThemeMode] = useState(false);
 
   const hideTimers = {
     designer: null,
@@ -49,7 +49,7 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
 
     // DESIGNER SUBMENU
     const designerSub = navigation_designoptions.find(
-      (item) => path === item.path
+      (item) => path === item.path,
     );
 
     if (designerSub) {
@@ -60,7 +60,7 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
 
     // DATA CONTROL SUBMENU
     const dataSub = navigation_dataoptions.find((item) =>
-      path.startsWith(item.matchPath)
+      path.startsWith(item.matchPath),
     );
     if (dataSub) {
       setnavsel("Data Control");

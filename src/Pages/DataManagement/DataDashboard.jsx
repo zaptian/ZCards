@@ -111,7 +111,7 @@ const DataDashboard = () => {
         if (!initializeResult?.status) {
           console.error(
             "[DataDashBoard:initializeWorkspace()] Failed :",
-            initializeResult?.error
+            initializeResult?.error,
           );
         }
 
@@ -120,7 +120,7 @@ const DataDashboard = () => {
         } else {
           console.error(
             "[DataDashBoard:importFiles()] Failed :",
-            importFileResult?.error
+            importFileResult?.error,
           );
         }
 
@@ -129,7 +129,7 @@ const DataDashboard = () => {
         } else {
           console.error(
             "[DataDashBoard:recentFiles()] Failed:",
-            recentFileResult?.error
+            recentFileResult?.error,
           );
         }
       } catch (error) {
@@ -150,7 +150,7 @@ const DataDashboard = () => {
     } else {
       console.error(
         "[DataDashboard:loadRecentFile()] :",
-        recentFileResult?.error
+        recentFileResult?.error,
       );
     }
   };
@@ -203,7 +203,7 @@ const DataDashboard = () => {
       const query = debouncedQuery.toLowerCase();
 
       result = result.filter((file) =>
-        file.name.toLowerCase().startsWith(query)
+        file.name.toLowerCase().startsWith(query),
       );
     }
 
@@ -211,7 +211,7 @@ const DataDashboard = () => {
     if (filters.name.trim()) {
       const nameQuery = filters.name.toLowerCase();
       result = result.filter((file) =>
-        file.name.toLowerCase().startsWith(nameQuery)
+        file.name.toLowerCase().startsWith(nameQuery),
       );
     }
 
@@ -219,7 +219,7 @@ const DataDashboard = () => {
       result = result.filter((file) =>
         file.mime_type_data.type
           .toLowerCase()
-          .startsWith(filters.type.toLowerCase())
+          .startsWith(filters.type.toLowerCase()),
       );
     }
 
@@ -308,7 +308,7 @@ const DataDashboard = () => {
 
     // Remove selected files
     setFileList((prev) =>
-      prev.filter((file) => !selectedIds.includes(file.id))
+      prev.filter((file) => !selectedIds.includes(file.id)),
     );
 
     // Change Status
@@ -322,7 +322,7 @@ const DataDashboard = () => {
       setPreviewSelected({ file_type: null, mime_type: null });
     } else {
       console.error(
-        `[DataDashBoard:handleDeleteSelected()] : ${c_result.error}`
+        `[DataDashBoard:handleDeleteSelected()] : ${c_result.error}`,
       );
     }
   };
@@ -399,11 +399,12 @@ const DataDashboard = () => {
                 {/* Import Button click */}
                 <CustomButton
                   btn_bg_color="min-w-[180px] min-h-[128px] flex flex-col relative
+                    m-1
                     bg-light-card1 dark:bg-dark-card1
                     border border-light-border dark:border-dark-border
                     rounded-[10px]
                     overflow-hidden
-                    hover:bg-light-hover dark:hover:bg-dark-hover
+                    hover:ring-2 hover:ring-icon-500/40
                     transition-colors"
                   iconSize="w-[64px] h-[64px]"
                   icon_animation="group-hover:scale-125"
@@ -431,11 +432,12 @@ const DataDashboard = () => {
                 {/* Edit Data Button click */}
                 <CustomButton
                   btn_bg_color="min-w-[180px] min-h-[128px] flex flex-col relative
+                    m-1
                     bg-light-card1 dark:bg-dark-card1
                     border border-light-border dark:border-dark-border
                     rounded-[10px]
                     overflow-hidden
-                    hover:bg-light-hover dark:hover:bg-dark-hover
+                    hover:ring-2 hover:ring-icon-500/40
                     transition-colors"
                   iconSize="w-[64px] h-[64px]"
                   icon_animation="group-hover:scale-125"

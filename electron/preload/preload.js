@@ -1,39 +1,41 @@
-import { contextBridge, ipcRenderer, webUtils } from "electron";
+import { contextBridge, ipcRenderer, webUtils, clipboard } from "electron";
 
-/**
- * Top Header Actions
- */
+/*-----------------------------------------------------------*/
+/* TOP NAVIGATION HEADER API CALLS */
+/*-----------------------------------------------------------*/
 contextBridge.exposeInMainWorld("electronAPI", {
   minimize: () => ipcRenderer.send("window-minimize"),
   maximize: () => ipcRenderer.send("window-maximize"),
   close: () => ipcRenderer.send("window-close"),
   onWindowMaximized: (callback) =>
     ipcRenderer.on("window-is-maximized", (event, isMaximized) =>
-      callback(isMaximized)
+      callback(isMaximized),
     ),
 });
 
-/**
- * Helper Actions
- */
+/*-----------------------------------------------------------*/
+/* HELPER API CALLS */
+/*-----------------------------------------------------------*/
 contextBridge.exposeInMainWorld("secureStore", {
   get: (key) => ipcRenderer.invoke("store:get", key),
   set: (key, value) => ipcRenderer.invoke("store:set", { key, value }),
   delete: (key) => ipcRenderer.invoke("store:delete", key),
 });
 
-/*-----------------------------------------------------------------------------------------*/
-/**
- *  Files Name Working - DataDashBoard.js
- */
-/*-----------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------*/
+/* DataDashBoard.handler.js IPC API CALLS */
+/*-----------------------------------------------------------*/
 contextBridge.exposeInMainWorld("DataDashBoard_API", {
-  /* ---------------- Workspace Initialization ---------------- */
+  /*-----------------------------------------------------------*/
+  /* WORKSPACE INITIALIZATION API */
+  /*-----------------------------------------------------------*/
   initializeWorkspace: () => {
     return ipcRenderer.invoke("initialize_work_space");
   },
 
-  /* -------------------- Import File Handler -------------------- */
+  /*-----------------------------------------------------------*/
+  /* IMPORT FILE ACCESS API */
+  /*-----------------------------------------------------------*/
   importFile: (payload) => ipcRenderer.invoke("import:file", payload),
 
   importUpload: (payload) => ipcRenderer.invoke("import:upload", payload),
@@ -60,7 +62,9 @@ contextBridge.exposeInMainWorld("DataDashBoard_API", {
 
   import_file_drag_and_drop: (dropFiles) => webUtils.getPathForFile(dropFiles),
 
-  /* ---------------- (Hold) History (Per-file metadata) ---------------- */
+  /*-----------------------------------------------------------*/
+  /* HISTORY FILE ACCESS API */
+  /*-----------------------------------------------------------*/
   historyCreate: (fileId, data) => {
     return ipcRenderer.invoke("history:create", fileId, data);
   },
@@ -77,8 +81,9 @@ contextBridge.exposeInMainWorld("DataDashBoard_API", {
     return ipcRenderer.invoke("history:list");
   },
 
-  /* ---------------- Recent ---------------- */
-
+  /*-----------------------------------------------------------*/
+  /* RECENT FILE ACCESS API */
+  /*-----------------------------------------------------------*/
   recentAdd: (fileId) => {
     return ipcRenderer.invoke("recent:add", fileId);
   },
@@ -87,13 +92,35 @@ contextBridge.exposeInMainWorld("DataDashBoard_API", {
     return ipcRenderer.invoke("recent:list");
   },
 
-  /* ---------------- Open File Handler ---------------- */
-
-  openFile: (payload) => {
-    return ipcRenderer.invoke("open:file", payload);
+  /*-----------------------------------------------------------*/
+  /* DATA FETCH FILE API */
+  /*-----------------------------------------------------------*/
+  fetchData: (payload) => {
+    return ipcRenderer.invoke("fetch:data", payload);
   },
 
-  /* ---------------- Delete / Trash ---------------- */
+  fetchDataRange: (payload) => {
+    return ipcRenderer.invoke("fetch:DataRange", payload);
+  },
+
+  /*-----------------------------------------------------------*/
+  /* FORM DATA FILE API */
+  /*-----------------------------------------------------------*/
+
+  addFormData: (payload) => {
+    return ipcRenderer.invoke("add:FormData", payload);
+  },
+
+  /*-----------------------------------------------------------*/
+  /* COPY CLIPBOARD DATA */
+  /*-----------------------------------------------------------*/
+  copyClipBoardText: (Text) => {
+    clipboard.writeText(Text);
+  },
+
+  /*-----------------------------------------------------------*/
+  /* DELETE FILE ACCESS API */
+  /*-----------------------------------------------------------*/
   singleMoveToTrash: (fileId) => {
     return ipcRenderer.invoke("delete:singleMoveToTrash", fileId);
   },

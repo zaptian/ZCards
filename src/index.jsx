@@ -6,11 +6,11 @@ import "./styles/index.css";
 import Templete from "./Templete";
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <HashRouter>
-      <ToastProvider>
-        <Templete />
-      </ToastProvider>
-    </HashRouter>
-  </StrictMode>
+  // <StrictMode>
+  <HashRouter>
+    <ToastProvider>
+      <Templete />
+    </ToastProvider>
+  </HashRouter>,
+  // </StrictMode>
 );

@@ -69,14 +69,19 @@ const HistoryFileCard = ({
     <div
       key={index}
       className="
+      group
       w-[180px] h-[128px]
-      flex flex-col relative
-      bg-light-card1 dark:bg-dark-card1
-      border border-b-0 border-light-border dark:border-dark-border
-      rounded-[10px]
-      overflow-visible
-      hover:bg-light-hover dark:hover:bg-dark-hover
-      transition-colors"
+      m-1
+    flex flex-col relative
+    bg-light-card1 dark:bg-dark-card1
+    border border-b-0 border-light-border dark:border-dark-border
+    rounded-[10px]
+    overflow-visible
+
+    hover:ring-2 hover:ring-icon-500/40
+
+    transition-all duration-200 ease-out
+    cursor-pointer"
       onClick={onShowPreview}
     >
       {/* MENU SECTION */}
@@ -134,7 +139,7 @@ const HistoryFileCard = ({
         {/* File Name */}
         <div
           className="max-w-full px-[10px] text-[15px] font-semibold truncate
-        text-light-text_secondary dark:text-dark-text_secondary"
+        text-light-text_secondary dark:text-dark-text_secondary group-hover:text-icon-seleceted_text dark:group-hover:text-icon_dark-bg"
           title={file_ele.name}
         >
           {file_ele.name}
@@ -142,7 +147,14 @@ const HistoryFileCard = ({
       </div>
 
       {/* BOTTOM BAR */}
-      <div className="border-t border-b rounded-b-[10px] border-light-border dark:border-dark-border bg-light-card2 dark:bg-dark-card2 text-light-text_muted dark:text-dark-text_muted px-1 py-1 flex justify-between items-center">
+      <div
+        className="border-t border-b rounded-b-[10px] 
+      border-light-border dark:border-dark-border 
+        group-hover:ring-2 group-hover:ring-icon-500/40
+      bg-light-card2 dark:bg-dark-card2 
+      text-light-text_muted dark:text-dark-text_muted 
+        px-1 py-1 flex justify-between items-center"
+      >
         <div className="text-[10px] font-semibold">
           Date : {formatDateTimeNoSeconds(file_ele.last_modified_at)}
         </div>

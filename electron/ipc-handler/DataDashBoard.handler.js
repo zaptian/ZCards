@@ -3,16 +3,11 @@ import path from "path";
 import fs from "fs/promises";
 import fsmain from "fs";
 import mime from "mime-types";
-import { mimeStyles } from "../utils/mime_type.js";
+import { Worker } from "worker_threads";
+import { mimeStyles } from "../utils/mime-type.utils.js";
+import { saveGoogleSheetAsXlsx } from "../utils/google-sheets.utils.js";
 
-import {
-  DataDashBoard_Files,
-  atomicWrite,
-  current_DateAndTime,
-} from "../utils/file_management.js";
-
-import { saveGoogleSheetAsXlsx } from "../utils/google_sheet_utils.js";
-import { excel_sheet_data_handle } from "../utils/excel_sheet_utils.js";
+let GLOBAL_DB_HANDLE = null;
 
 export const WORKSPACE_STRUCTURE = {
   HISTORY: "History_file_cache",
@@ -20,9 +15,28 @@ export const WORKSPACE_STRUCTURE = {
   DELETED: "Delete_file_cache",
   RESOURCE_FILE: "Resource_file_cache",
   GOOGLE_SHEET: "Google_sheet_cache",
+  DATABASE_CONFIG: "DB_cache",
 };
 
-/* -------------------------------------- Helper Functions ----------------------------- */
+export const DataDashBoard_Files = {
+  file_index_cache: {
+    filename: "file_index_cache.json",
+  },
+  recent_file_cache: {
+    filename: "recent_index_cache.json",
+  },
+};
+
+export async function atomicWrite(filePath, data) {
+  const tmp = filePath + ".tmp";
+  await fs.writeFile(tmp, JSON.stringify(data, null, 2));
+  await fs.rename(tmp, filePath);
+}
+
+export function current_DateAndTime() {
+  return new Date().toISOString();
+}
+
 export function getWorkspacePath() {
   return path.join(app.getPath("userData"), "workspace_cache");
 }
@@ -31,12 +45,279 @@ export function getSectionPath(section) {
   return path.join(getWorkspacePath(), section);
 }
 
+export async function readFile_Meta_Data(filePath) {
+  if (!filePath) {
+    return { status: false };
+  }
+  let resultData = JSON.parse(await fs.readFile(filePath, "utf-8"));
+
+  return {
+    status: true,
+    fileData: resultData,
+  };
+}
+
+/*----------------------------------- FETCH FILE HANDLE --------------------------------  */
+/**
+ * @functionName  runWorker(file_meta_data, dbconfig_Path)
+ * @purpose       Perform Work thread to import file data.
+ */
+async function runWorker(file_meta_data, dbconfig_Path) {
+  try {
+    let worker_path = app.getAppPath();
+
+    return new Promise((resolve, reject) => {
+      /*---------------------------------------------------------*/
+      /* (worker): Handler creation and passing data   */
+      /*---------------------------------------------------------*/
+      const worker_handle = new Worker(
+        path.join(worker_path, "utils", "excel-formatter.utils.js"),
+        {
+          workerData: {
+            file_Data: file_meta_data,
+            dbconfig_Path: dbconfig_Path,
+          },
+        },
+      );
+
+      /*---------------------------------------------------------*/
+      /* (worker): parentPort.postMessage handler -> (message)   */
+      /*---------------------------------------------------------*/
+      worker_handle.on("message", (message) => {
+        if (message.type === "sheetComplete") {
+          console.log("[message:runworker][sheetComplete] : ", message);
+        }
+
+        if (message.type === "done") {
+          console.log("[message:runworker][done] : ", message);
+          resolve({
+            status: true,
+            sheetsData: message.result,
+          });
+        }
+
+        if (message.type === "error") {
+          console.error("[message:runworker][error] : ", message);
+          reject(new Error(message.error));
+        }
+      });
+
+      /*---------------------------------------------------------*/
+      /* (worker): Error handler -> (err)   */
+      /*---------------------------------------------------------*/
+      worker_handle.on("error", (err) => {
+        console.error("[worker:error] : ", err);
+        reject(err);
+      });
+
+      /*---------------------------------------------------------*/
+      /* (worker): Exit handler -> (code)   */
+      /*---------------------------------------------------------*/
+      worker_handle.on("exit", (code) => {
+        if (code !== 0) {
+          console.error(
+            "[worker:exit] : ",
+            `Worker stopped with exit code ${code}`,
+          );
+          reject(new Error(`Worker stopped with exit code ${code}`));
+        }
+      });
+    });
+  } catch (error) {
+    throw new Error(`[worker:runworker] : ${error}`);
+  }
+}
+
+/**
+ * @functionName  registerOpenFileHandlers()
+ * @purpose       To register the Open file Handles
+ */
+function registerFetchFileHandlers() {
+  /*-------------------------------------------------
+   * IPC: [fetch:data]
+   * Purpose : Used to open the file and extract the data
+   * Returns : { status: boolean, error?: string }
+   *------------------------------------------------*/
+  ipcMain.handle("fetch:data", async (_, payload) => {
+    try {
+      const file_Id = payload.file_id;
+      const workspace = getWorkspacePath();
+      const indexPath = path.join(
+        workspace,
+        DataDashBoard_Files.file_index_cache.filename,
+      );
+      const dbconfig_Path = getSectionPath(WORKSPACE_STRUCTURE.DATABASE_CONFIG);
+      const history_file_path = path.join(
+        getSectionPath(WORKSPACE_STRUCTURE.HISTORY),
+        `${file_Id}.json`,
+      );
+
+      let indexData = { version: 1, files: {} };
+      let historyData = {};
+
+      let result = null;
+
+      try {
+        indexData = await readFile_Meta_Data(indexPath);
+      } catch {
+        indexData = { version: 1, files: {} };
+      }
+      if (!indexData?.status) {
+        throw new Error("Invalid File ID");
+      }
+
+      const startMs = Date.now();
+      const startHr = process.hrtime();
+
+      const file_meta_data = indexData?.fileData?.files?.[file_Id];
+      result = await runWorker(file_meta_data, dbconfig_Path);
+
+      if (result?.sheetsData) {
+        historyData = await readFile_Meta_Data(history_file_path);
+        if (historyData?.status) {
+          historyData = {
+            ...historyData?.fileData,
+            sheetsData: result?.sheetsData || {},
+          };
+          historyData.last_modified_at = current_DateAndTime();
+          await atomicWrite(history_file_path, historyData);
+        }
+      }
+
+      const endMs = Date.now();
+      const endHr = process.hrtime(startHr);
+
+      const durationMs = endMs - startMs;
+      const durationSeconds = endHr[0] + endHr[1] / 1e9;
+
+      console.log("End Time:", new Date().toISOString());
+      console.log("🎉 Import Complete");
+      console.log("\n===============================");
+      console.log("⏱ Execution Metrics");
+      console.log("===============================");
+      console.log(`Total Time: ${durationMs} ms`);
+      console.log(`Total Time: ${durationSeconds.toFixed(3)} seconds`);
+      console.log("===============================\n");
+
+      return {
+        status: true,
+        payload_result: result?.sheetsData || {},
+        payload_file: file_meta_data,
+      };
+    } catch (error) {
+      console.error("[fetch:data] Failed :", error);
+      return { status: false, error: error.message };
+    }
+  });
+
+  /*-------------------------------------------------
+   * IPC: [fetch:DataRange]
+   * Purpose : Used to extract the data based on range
+   * Returns : { status: boolean, rows: object, error?: string }
+   *------------------------------------------------*/
+  ipcMain.handle("fetch:DataRange", async (_, payload) => {
+    try {
+      console.log("[fetch:DataRange]:", payload);
+      const { fileID, sheetName, startRow, endRow } = payload;
+
+      if (!fileID || !sheetName) {
+        return {
+          status: false,
+          error: "Missing fileID or sheetName",
+        };
+      }
+
+      if (
+        typeof startRow !== "number" ||
+        typeof endRow !== "number" ||
+        startRow < 1 ||
+        endRow < startRow
+      ) {
+        return {
+          status: false,
+          error: "Invalid row range",
+        };
+      }
+
+      const rows = GLOBAL_DB_HANDLE.getStatement("getSheetRows").all(
+        fileID,
+        sheetName,
+        startRow,
+        endRow,
+      );
+
+      if (!rows || rows.length === 0) {
+        return {
+          status: true,
+          rows: [],
+        };
+      }
+
+      return {
+        status: true,
+        rows,
+      };
+    } catch (error) {
+      console.error("[fetch:DataRange] ERROR:", error);
+
+      return {
+        status: false,
+        error: `[fetch:DataRange]: ${error.message}`,
+      };
+    }
+  });
+
+  /*-------------------------------------------------
+   * IPC: [add:FormData]
+   * Purpose : Used to Add the form data to sheets
+   * Returns : { status: boolean }
+   *------------------------------------------------*/
+  ipcMain.handle("add:FormData", async (_, payload) => {
+    try {
+      const file_Id = payload?.fileID;
+      const sheetName = payload?.sheetName;
+
+      const history_file_path = path.join(
+        getSectionPath(WORKSPACE_STRUCTURE.HISTORY),
+        `${file_Id}.json`,
+      );
+
+      let historyData = {};
+
+      historyData = await readFile_Meta_Data(history_file_path);
+      if (historyData?.status) {
+        historyData = {
+          ...historyData?.fileData,
+          [sheetName]: payload?.formData || {},
+        };
+        historyData.last_modified_at = current_DateAndTime();
+        await atomicWrite(history_file_path, historyData);
+      }
+      return { status: true };
+    } catch (error) {
+      console.error("[add:FormData] : ", error);
+      return { status: false };
+    }
+  });
+}
+/*--------------------------------------------------------------------------------------------- */
+
+/*----------------------------------- HISTORY FILE HANDLE --------------------------------  */
+/**
+ * @functionName  registerHistoryHandlers()
+ * @purpose       To register the delete file handles
+ */
 function registerHistoryHandlers() {
+  /*-------------------------------------------------
+   * IPC: [history:create]
+   * Purpose : Used to create the history file resource.
+   * Returns : { status: boolean ,error?: string }
+   *------------------------------------------------*/
   ipcMain.handle("history:create", async (_, fileId, data) => {
     try {
       const filePath = path.join(
         getSectionPath(WORKSPACE_STRUCTURE.HISTORY),
-        `${fileId}.json`
+        `${fileId}.json`,
       );
 
       await atomicWrite(filePath, data);
@@ -46,11 +327,16 @@ function registerHistoryHandlers() {
     }
   });
 
+  /*-------------------------------------------------
+   * IPC: [history:read]
+   * Purpose : Used to read the history file resource.
+   * Returns : { status: boolean, data?: object ,error?: string }
+   *------------------------------------------------*/
   ipcMain.handle("history:read", async (_, fileId) => {
     try {
       const filePath = path.join(
         getSectionPath(WORKSPACE_STRUCTURE.HISTORY),
-        `${fileId}.json`
+        `${fileId}.json`,
       );
 
       const content = await fs.readFile(filePath, "utf-8");
@@ -60,6 +346,11 @@ function registerHistoryHandlers() {
     }
   });
 
+  /*-------------------------------------------------
+   * IPC: [history:list]
+   * Purpose : Used to read all the history file resource.
+   * Returns : { status: boolean, files?: object ,error?: string }
+   *------------------------------------------------*/
   ipcMain.handle("history:list", async () => {
     try {
       const dir = getSectionPath(WORKSPACE_STRUCTURE.HISTORY);
@@ -68,56 +359,6 @@ function registerHistoryHandlers() {
       return { status: true, files };
     } catch (err) {
       return { status: false, error: err.message };
-    }
-  });
-}
-
-/*----------------------------------- Open FILE HANDLE --------------------------------  */
-/**
- * @functionName  registerOpenFileHandlers()
- * @purpose       To register the Open file Handles
- */
-function registerOpenFileHandlers() {
-  /*-------------------------------------------------
-   * IPC: [open:file]
-   * Purpose : Used to open the file and extract the data
-   * Returns : { status: boolean, error?: string }
-   *------------------------------------------------*/
-  ipcMain.handle("open:file", async (_, payload) => {
-    try {
-      const workspace = getWorkspacePath();
-      const indexPath = path.join(
-        workspace,
-        DataDashBoard_Files.file_index_cache.filename
-      );
-
-      let indexData = { version: 1, files: {} };
-      let file_id_data = {};
-
-      try {
-        indexData = JSON.parse(await fs.readFile(indexPath, "utf-8"));
-      } catch (error) {
-        indexData = { version: 1, files: {} };
-      }
-
-      if (indexData?.files[payload.file_id]) {
-        file_id_data = indexData?.files[payload.file_id];
-        const c_result = await excel_sheet_data_handle(file_id_data);
-        if (c_result.status) {
-          return {
-            status: true,
-            payload_result: c_result.excel_data,
-            payload_file: file_id_data,
-          };
-        } else {
-          throw new Error(c_result.error);
-        }
-      } else {
-        throw new Error("Invalid File ID");
-      }
-    } catch (error) {
-      console.error("[open:file] Failed :", error);
-      return { status: false, error: error.message };
     }
   });
 }
@@ -143,12 +384,12 @@ function registerRecentHandlers() {
       let workspacePath = getWorkspacePath();
       let indexPath = path.join(
         workspacePath,
-        DataDashBoard_Files.file_index_cache.filename
+        DataDashBoard_Files.file_index_cache.filename,
       );
       let recentPath = path.join(
         workspacePath,
         WORKSPACE_STRUCTURE.RECENT,
-        DataDashBoard_Files.recent_file_cache.filename
+        DataDashBoard_Files.recent_file_cache.filename,
       );
 
       try {
@@ -182,7 +423,7 @@ function registerRecentHandlers() {
       const recentDir = getSectionPath(WORKSPACE_STRUCTURE.RECENT);
       const recentPath = path.join(
         recentDir,
-        DataDashBoard_Files.recent_file_cache.filename
+        DataDashBoard_Files.recent_file_cache.filename,
       );
       let recentData;
 
@@ -216,12 +457,12 @@ function registerDeleteHandlers() {
       const workspace = getWorkspacePath();
       const indexPath = path.join(
         workspace,
-        DataDashBoard_Files.file_index_cache.filename
+        DataDashBoard_Files.file_index_cache.filename,
       );
       const recentDir = getSectionPath(WORKSPACE_STRUCTURE.RECENT);
       const recentPath = path.join(
         recentDir,
-        DataDashBoard_Files.recent_file_cache.filename
+        DataDashBoard_Files.recent_file_cache.filename,
       );
 
       let indexData = { version: 1, files: {} };
@@ -259,12 +500,12 @@ function registerDeleteHandlers() {
         // 2. Move history file → deleted
         const fromFilePath = path.join(
           getSectionPath(WORKSPACE_STRUCTURE.HISTORY),
-          `${fileId}.json`
+          `${fileId}.json`,
         );
 
         const toFilePath = path.join(
           getSectionPath(WORKSPACE_STRUCTURE.DELETED),
-          `${fileId}.json`
+          `${fileId}.json`,
         );
 
         try {
@@ -273,7 +514,7 @@ function registerDeleteHandlers() {
           // File may already be moved — do not break delete
           console.warn(
             `[delete:moveToTrach] Failed ${fileId}:`,
-            moveErr.message
+            moveErr.message,
           );
         }
       }
@@ -295,12 +536,12 @@ function registerDeleteHandlers() {
       const workspace = getWorkspacePath();
       const indexPath = path.join(
         workspace,
-        DataDashBoard_Files.file_index_cache.filename
+        DataDashBoard_Files.file_index_cache.filename,
       );
       const recentDir = getSectionPath(WORKSPACE_STRUCTURE.RECENT);
       const recentPath = path.join(
         recentDir,
-        DataDashBoard_Files.recent_file_cache.filename
+        DataDashBoard_Files.recent_file_cache.filename,
       );
 
       let indexData = { version: 1, files: {} };
@@ -339,12 +580,12 @@ function registerDeleteHandlers() {
       -----------------------------------*/
       const fromFilePath = path.join(
         getSectionPath(WORKSPACE_STRUCTURE.HISTORY),
-        `${fileId}.json`
+        `${fileId}.json`,
       );
 
       const toFilePath = path.join(
         getSectionPath(WORKSPACE_STRUCTURE.DELETED),
-        `${fileId}.json`
+        `${fileId}.json`,
       );
 
       try {
@@ -353,7 +594,7 @@ function registerDeleteHandlers() {
         // File may already be moved — do not break delete
         console.warn(
           `[delete:singleMoveToTrash] Failed ${fileId}:`,
-          moveErr.message
+          moveErr.message,
         );
       }
 
@@ -369,7 +610,7 @@ function registerDeleteHandlers() {
     try {
       const filePath = path.join(
         getSectionPath(WORKSPACE_STRUCTURE.DELETED),
-        `${fileId}.json`
+        `${fileId}.json`,
       );
 
       await fs.unlink(filePath);
@@ -480,7 +721,7 @@ function registerImportHandlers() {
       };
       await atomicWrite(
         path.join(historyDir, `${fileId}.json`),
-        file_meta_data
+        file_meta_data,
       );
       /*----------------------------------------------------------*/
 
@@ -489,7 +730,7 @@ function registerImportHandlers() {
       let workspacePath = getWorkspacePath();
       let indexPath = path.join(
         workspacePath,
-        DataDashBoard_Files.file_index_cache.filename
+        DataDashBoard_Files.file_index_cache.filename,
       );
       try {
         const raw = await fs.readFile(indexPath, "utf-8");
@@ -526,7 +767,7 @@ function registerImportHandlers() {
           transferred += chunk.length;
           const progress = Math.min(
             100,
-            Math.round((transferred / totalSize) * 100)
+            Math.round((transferred / totalSize) * 100),
           );
 
           event.sender.send("import:upload:progress", {
@@ -579,12 +820,14 @@ function registerImportHandlers() {
     try {
       const id_unique = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
       const resourceDir = path.join(
-        getSectionPath(WORKSPACE_STRUCTURE.RESOURCE_FILE)
+        getSectionPath(WORKSPACE_STRUCTURE.RESOURCE_FILE),
       );
+      const historyDir = getSectionPath(WORKSPACE_STRUCTURE.HISTORY);
+
       const fileupload_payload = await saveGoogleSheetAsXlsx(
         payload.url,
         resourceDir,
-        id_unique
+        id_unique,
       );
 
       if (!fileupload_payload.status) {
@@ -596,12 +839,13 @@ function registerImportHandlers() {
       let workspacePath = getWorkspacePath();
       let indexPath = path.join(
         workspacePath,
-        DataDashBoard_Files.file_index_cache.filename
+        DataDashBoard_Files.file_index_cache.filename,
       );
       const file_name = fileupload_payload.fileName;
       const file_extension = path.extname(fileupload_payload.fileName);
+      const absolutePath = fileupload_payload.filePath;
       const targetPath = fileupload_payload.filePath;
-      const current_file_meta_data = await fs.stat(targetPath);
+      const current_file_meta_data = await fs.stat(absolutePath);
       const totalSize = current_file_meta_data.size;
       const current_mime_type = mime.lookup(file_name);
       const current_mime_type_data =
@@ -618,7 +862,7 @@ function registerImportHandlers() {
       indexData.files[id_unique] = {
         id: id_unique,
         name: file_name,
-        absolutePath: targetPath,
+        absolutePath: absolutePath,
         targetPath: targetPath,
         size: totalSize,
         mime_type: current_mime_type,
@@ -635,11 +879,10 @@ function registerImportHandlers() {
       /*----------------------------------------------------------*/
 
       /*---------------- Google Sheet File Creation -----------------*/
-      const historyDir = getSectionPath(WORKSPACE_STRUCTURE.GOOGLE_SHEET);
       const file_meta_data = {
         id: id_unique,
         originalName: file_name,
-        absolutePath: targetPath,
+        absolutePath: absolutePath,
         targetPath: targetPath,
         size: totalSize,
         mime_type: current_mime_type,
@@ -652,7 +895,7 @@ function registerImportHandlers() {
       };
       await atomicWrite(
         path.join(historyDir, `${id_unique}.json`),
-        file_meta_data
+        file_meta_data,
       );
       /*----------------------------------------------------------*/
 
@@ -678,7 +921,7 @@ function registerImportHandlers() {
       const workspacePath = getWorkspacePath();
       const indexPath = path.join(
         workspacePath,
-        DataDashBoard_Files.file_index_cache.filename
+        DataDashBoard_Files.file_index_cache.filename,
       );
 
       let indexData = { version: 1, files: {} };
@@ -691,8 +934,8 @@ function registerImportHandlers() {
           ...parsed,
           files: Object.fromEntries(
             Object.entries(parsed.files || {}).filter(
-              ([_, file]) => file.delete_status === false
-            )
+              ([_, file]) => file.delete_status === false,
+            ),
           ),
         };
       } catch {
@@ -738,8 +981,8 @@ async function init_workspace(param_basepath) {
 
   await Promise.allSettled(
     Object.values(WORKSPACE_STRUCTURE).map((dir) =>
-      fs.mkdir(path.join(param_basepath, dir), { recursive: true })
-    )
+      fs.mkdir(path.join(param_basepath, dir), { recursive: true }),
+    ),
   );
 
   return {
@@ -755,9 +998,10 @@ async function init_workspace(param_basepath) {
  * @Purpose       To Register the handlers in IPC
  * @Return {Object} : {status, result | error}
  */
-export default async function DataDashBoardHandler() {
+export async function DataDashBoardHandler(DB_HANDLER) {
   ipcMain.handle("initialize_work_space", async () => {
     try {
+      GLOBAL_DB_HANDLE = DB_HANDLER;
       console.log("#----------- DataDashboard Init Start -----------#");
       const workspacePath = getWorkspacePath();
       const result = await init_workspace(workspacePath);
@@ -773,7 +1017,7 @@ export default async function DataDashBoardHandler() {
   await registerRecentHandlers();
   await registerDeleteHandlers();
   await registerImportHandlers();
-  await registerOpenFileHandlers();
+  await registerFetchFileHandlers();
 }
 
 /*--------------------------------------------------------------------------------------------- */

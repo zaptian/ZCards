@@ -5,12 +5,20 @@ import Store from "electron-store";
 const { autoUpdater } = pkg;
 import { fileURLToPath } from "url";
 
-// Import all IPC handler modules:
-import DataDashBoardHandler from "./ipc/DataDashBoardHandler.js";
+// DataBase config Module
+import { ExcelDatabase } from "./dbconfig/database.config.js";
+
+// Import all IPC handler modules
+import {
+  DataDashBoardHandler,
+  WORKSPACE_STRUCTURE,
+  getSectionPath,
+} from "./ipc-handler/DataDashBoard.handler.js";
 
 // Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+let DATABASE_HANDLER = null;
 
 async function MainWindow() {
   const store = new Store();
@@ -55,7 +63,7 @@ async function MainWindow() {
     autoUpdater.checkForUpdatesAndNotify();
     windowCreation.webContents.send(
       "window-is-maximized",
-      windowCreation.isMaximized()
+      windowCreation.isMaximized(),
     );
   });
 
@@ -129,16 +137,28 @@ autoUpdater.on("update-downloaded", () => {
     });
 });
 
-/* Application Ready Stage */
+/* Application Init Stage */
 app.whenReady().then(async () => {
+  // DataBase Init
+  DATABASE_HANDLER = new ExcelDatabase(
+    getSectionPath(WORKSPACE_STRUCTURE.DATABASE_CONFIG),
+  );
+  DATABASE_HANDLER.init();
+
+  // MainWindow Init
   await MainWindow();
 
   // Register all IPC handlers here:
-  await DataDashBoardHandler();
+  await DataDashBoardHandler(DATABASE_HANDLER);
+});
+
+// Application Before Quit
+app.on("before-quit", () => {
+  DATABASE_HANDLER.close();
 });
 
 /* Application Close Stage */
-app.on("windowCreation-all-closed", () => {
+app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }

@@ -142,8 +142,30 @@ export const Edit_Data_Label = {
   },
 };
 
-export const Data_Edit_Label = {
+export const DataEditor_Label = {
   header_label: {
     label: "Excel",
+  },
+
+  title_open_sidepanel: {
+    title: "Open Panel",
+  },
+
+  title_close_sidepanel: {
+    title: "Close Panel",
+  },
+};
+
+export const DataEditor_message = {
+  sidebar_pinned_message: {
+    message_type: "warning",
+    reason: "Pinned sidebar can not close.",
+    message: "Pinned panel cannot be closed.",
+  },
+
+  clipboard_copied_message: {
+    message_type: "success",
+    reason: "Cell data copied to clipboard",
+    message: "Data copied successfully.",
   },
 };

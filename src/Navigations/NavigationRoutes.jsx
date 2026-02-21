@@ -9,7 +9,7 @@ import DataImport from "../Pages/DataManagement/DataImport";
 import PrintCard from "../Pages/PrintCard";
 import TempleteDesign from "../Pages/TempleteDesign";
 import PhotoEditor from "../Pages/PhotoEditor";
-import Settings from "../Pages/Settings";
+import SettingsPanel from "../Pages/SettingsPanel";
 
 const NavigationRoutes = () => {
   return (
@@ -30,7 +30,7 @@ const NavigationRoutes = () => {
 
       <Route path="/photo" element={<PhotoEditor />} />
 
-      <Route path="/settings" element={<Settings />} />
+      <Route path="/settings" element={<SettingsPanel />} />
     </Routes>
   );
 };
