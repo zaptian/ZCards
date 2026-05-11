@@ -93,22 +93,26 @@ contextBridge.exposeInMainWorld("DataDashBoard_API", {
   },
 
   /*-----------------------------------------------------------*/
-  /* DATA FETCH FILE API */
+  /* FETCH FORM DATA FILE API */
   /*-----------------------------------------------------------*/
   fetchData: (payload) => {
-    return ipcRenderer.invoke("fetch:data", payload);
+    return ipcRenderer.invoke("fetch:Data", payload);
   },
 
   fetchDataRange: (payload) => {
     return ipcRenderer.invoke("fetch:DataRange", payload);
   },
 
-  /*-----------------------------------------------------------*/
-  /* FORM DATA FILE API */
-  /*-----------------------------------------------------------*/
+  fetchFormData: (payload) => {
+    return ipcRenderer.invoke("fetch:FormData", payload);
+  },
 
   addFormData: (payload) => {
     return ipcRenderer.invoke("add:FormData", payload);
+  },
+
+  updateEditedData: (payload) => {
+    return ipcRenderer.invoke("update:EditedData", payload);
   },
 
   /*-----------------------------------------------------------*/

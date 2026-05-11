@@ -8,6 +8,7 @@ import MIME_File_icon from "./MIME_File_icon";
 import HistoryFilterPanel from "./HistoryFilterPanel";
 import { useDismissablePanel } from "./useDismissablePanel";
 import CustomImageInput from "./CustomImageInput";
+import { useNavigate } from "react-router-dom";
 
 /* ---------------------- Date Formating ------------------------- */
 function formatDateTimeNoSeconds(dateValue) {
@@ -132,7 +133,10 @@ const EditFileCard = ({ fileshow_data = {}, open_file_click }) => {
   );
 };
 
+/* -------------------------------- EditPopOver -------------------------- */
 const EditorPopOver = ({ onClose }) => {
+  const navigate = useNavigate();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [fileList, setFileList] = useState([]);
@@ -179,7 +183,7 @@ const EditorPopOver = ({ onClose }) => {
         } else {
           console.error(
             "[DataDashboard:loadRecentFile()] :",
-            recentResult?.error
+            recentResult?.error,
           );
         }
       } catch (error) {
@@ -211,7 +215,7 @@ const EditorPopOver = ({ onClose }) => {
     if (debouncedQuery.trim()) {
       const query = debouncedQuery.toLowerCase();
       result = result.filter((file) =>
-        file.name.toLowerCase().startsWith(query)
+        file.name.toLowerCase().startsWith(query),
       );
     }
 
@@ -219,7 +223,7 @@ const EditorPopOver = ({ onClose }) => {
     if (filters.name.trim()) {
       const nameQuery = filters.name.toLowerCase();
       result = result.filter((file) =>
-        file.name.toLowerCase().startsWith(nameQuery)
+        file.name.toLowerCase().startsWith(nameQuery),
       );
     }
 
@@ -227,7 +231,7 @@ const EditorPopOver = ({ onClose }) => {
       result = result.filter((file) =>
         file.mime_type_data.type
           .toLowerCase()
-          .startsWith(filters.type.toLowerCase())
+          .startsWith(filters.type.toLowerCase()),
       );
     }
 
@@ -261,6 +265,21 @@ const EditorPopOver = ({ onClose }) => {
   const isQueryOnly = hasQuery && !hasFilters;
   const isFilterOnly = hasFilters && !hasQuery;
   /* ------------------------------------------------------------- */
+
+  async function handleOpenFile(fileId) {
+    const c_result = await window.DataDashBoard_API.recentAdd(fileId);
+
+    if (c_result.status) {
+      const c_resultData = await window.DataDashBoard_API.recentList();
+      if (c_resultData.status) {
+        navigate(`/data/edit/${fileId}`);
+      } else {
+        throw new Error(c_resultData.error);
+      }
+    } else {
+      console.error(`[DataDashBoard:handleOpenFile()] : ${c_result.error}`);
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
@@ -420,7 +439,7 @@ const EditorPopOver = ({ onClose }) => {
                     key={recentFile.id}
                     fileshow_data={recentFile}
                     open_file_click={(id) => {
-                      console.log(id);
+                      handleOpenFile(id);
                     }}
                   />
                 ) : (
@@ -497,7 +516,7 @@ const EditorPopOver = ({ onClose }) => {
                       key={file.id}
                       fileshow_data={file}
                       open_file_click={(id) => {
-                        console.log(id);
+                        handleOpenFile(id);
                       }}
                     />
                   ))}

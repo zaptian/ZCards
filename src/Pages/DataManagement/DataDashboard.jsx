@@ -84,13 +84,9 @@ const DataDashboard = () => {
   });
   const [fileList, setFileList] = useState([]);
   const [recentFile, setRecentFile] = useState({});
-  const [showBoxMenu, setBoxMenu] = useState(true);
 
   const [showImportMenu, setShowImportMenu] = useState(false);
   const [showEditDataMenu, setshowEditDataMenu] = useState(false);
-
-  // Toast Message use
-  const { addToast } = useToast();
 
   const filterRef = useRef(null);
   const sortRef = useRef(null);
@@ -342,7 +338,7 @@ const DataDashboard = () => {
 
   return (
     /* Data DashBoard */
-    <div className="w-full p-3 h-[calc(100vh-50px)] overflow-y-auto custom-scroll dark:bg-dark-bg">
+    <div className="w-full p-3 h-[calc(100vh-50px)] overflow-y-auto custom-scroll bg-light-bg dark:bg-dark-bg">
       {/* Left Files Panel */}
       <div>
         {/* Header Panel */}
@@ -398,8 +394,7 @@ const DataDashboard = () => {
               <div>
                 {/* Import Button click */}
                 <CustomButton
-                  btn_bg_color="min-w-[180px] min-h-[128px] flex flex-col relative
-                    m-1
+                  btn_bg_color="min-w-[180px] min-h-[128px] flex flex-col m-1 relative 
                     bg-light-card1 dark:bg-dark-card1
                     border border-light-border dark:border-dark-border
                     rounded-[10px]
@@ -411,6 +406,7 @@ const DataDashboard = () => {
                   textColor="text-icon-500 dark:text-icon_dark-500"
                   iconSrc={data_control_icon.file_import.icon}
                   label={data_control_icon.file_import.label}
+                  label_style={"mt-2 text-sm font-medium"}
                   onClick={() => {
                     setShowImportMenu((prev) => !prev);
                   }}
@@ -444,6 +440,7 @@ const DataDashboard = () => {
                   textColor="text-icon-500 dark:text-icon_dark-500"
                   iconSrc={data_control_icon.file_Edit.icon}
                   label={data_control_icon.file_Edit.label}
+                  label_style={"mt-2 text-sm font-medium"}
                   onClick={() => {
                     setshowEditDataMenu((prev) => !prev);
                   }}
@@ -685,11 +682,11 @@ const DataDashboard = () => {
               </div>
 
               {/* File Management List */}
-              {showBoxMenu ? (
-                <div className="flex flex-col min-h-[600px] max-h-[680px] my-[20px] custom-scroll overflow-y-auto">
-                  {/* Table Header Panel */}
-                  <div
-                    className="
+
+              <div className="flex flex-col min-h-[600px] max-h-[680px] my-[20px] custom-scroll overflow-y-auto">
+                {/* Table Header Panel */}
+                <div
+                  className="
                     w-full 
                     grid grid-cols-[40px_1fr_150px_150px_100px] 
                     items-center
@@ -701,44 +698,44 @@ const DataDashboard = () => {
                     text-light-text1 dark:text-dark-text1
                     sticky top-0 z-[10]
                   "
-                  >
-                    {/* Select All Checkbox */}
-                    <div className="flex items-center justify-center">
-                      <CustomCheckBox
-                        id="file_select_all"
-                        checked={checkedAll}
-                        onChange={(e) => setCheckedAll(e.target.checked)}
-                      />
-                    </div>
-
-                    {/* File Name */}
-                    <div className="pl-2 font-extrabold">
-                      <CustomLabel label_text="File Name" />
-                    </div>
-
-                    {/* Type Name */}
-                    <div className="pl-2 font-extrabold">
-                      <CustomLabel label_text="Type" />
-                    </div>
-
-                    {/* Last Modified */}
-                    <div className="pl-2 font-extrabold">
-                      <CustomLabel label_text="Last Modified" />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="pl-2 font-extrabold flex justify-end items-center">
-                      <CustomLabel label_text="Actions" />
-                    </div>
+                >
+                  {/* Select All Checkbox */}
+                  <div className="flex items-center justify-center">
+                    <CustomCheckBox
+                      id="file_select_all"
+                      checked={checkedAll}
+                      onChange={(e) => setCheckedAll(e.target.checked)}
+                    />
                   </div>
 
-                  {/* -------------------- Data Panel -------------------- */}
-                  <div className="flex flex-col">
-                    {/* -------- No Search Result -------- */}
-                    {showNoSearchResult && (
-                      <div className="mt-10 px-4">
-                        <div
-                          className="
+                  {/* File Name */}
+                  <div className="pl-2 font-extrabold">
+                    <CustomLabel label_text="File Name" />
+                  </div>
+
+                  {/* Type Name */}
+                  <div className="pl-2 font-extrabold">
+                    <CustomLabel label_text="Type" />
+                  </div>
+
+                  {/* Last Modified */}
+                  <div className="pl-2 font-extrabold">
+                    <CustomLabel label_text="Last Modified" />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pl-2 font-extrabold flex justify-end items-center">
+                    <CustomLabel label_text="Actions" />
+                  </div>
+                </div>
+
+                {/* -------------------- Data Panel -------------------- */}
+                <div className="flex flex-col">
+                  {/* -------- No Search Result -------- */}
+                  {showNoSearchResult && (
+                    <div className="mt-10 px-4">
+                      <div
+                        className="
                           mx-auto
                           max-w-md
                           text-center
@@ -747,53 +744,50 @@ const DataDashboard = () => {
                           dark:text-dark-text_muted
                           break-words
                         "
-                        >
-                          {`${Data_Management_Label.no_search_found.label} "${debouncedQuery}"`}
-                        </div>
+                      >
+                        {`${Data_Management_Label.no_search_found.label} "${debouncedQuery}"`}
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {/* -------- No Filter Result -------- */}
-                    {showNoFilterResult && (
-                      <div className="mt-10 p-4 text-center text-md text-light-text_muted dark:text-dark-text_muted">
-                        {Data_Management_Label.no_search_found_filter.label}
-                      </div>
-                    )}
+                  {/* -------- No Filter Result -------- */}
+                  {showNoFilterResult && (
+                    <div className="mt-10 p-4 text-center text-md text-light-text_muted dark:text-dark-text_muted">
+                      {Data_Management_Label.no_search_found_filter.label}
+                    </div>
+                  )}
 
-                    {/* -------- File List -------- */}
-                    {hasResults
-                      ? search_result_Files.map((file) => (
-                          <HistoryFileData
-                            key={file.id}
-                            item={file}
-                            file_type={
-                              file.mime_type_data ?? mimeStyles.default
-                            }
-                            checked={rowChecks[file.id] || false}
-                            onClick={() => {
-                              setPreviewSelected({
-                                file_type: file,
-                                mime_type:
-                                  file.mime_type_data ?? mimeStyles.default,
-                              });
-                            }}
-                            onCheck={handleRowCheck}
-                            onFileListShow={async () => {
-                              await loadFileList();
-                            }}
-                          />
-                        ))
-                      : null}
+                  {/* -------- File List -------- */}
+                  {hasResults
+                    ? search_result_Files.map((file) => (
+                        <HistoryFileData
+                          key={file.id}
+                          item={file}
+                          file_type={file.mime_type_data ?? mimeStyles.default}
+                          checked={rowChecks[file.id] || false}
+                          onClick={() => {
+                            setPreviewSelected({
+                              file_type: file,
+                              mime_type:
+                                file.mime_type_data ?? mimeStyles.default,
+                            });
+                          }}
+                          onCheck={handleRowCheck}
+                          onFileListShow={async () => {
+                            await loadFileList();
+                          }}
+                        />
+                      ))
+                    : null}
 
-                    {/* -------- No Files Imported (Idle State) -------- */}
-                    {showNoFilesImported && (
-                      <div className="p-4 text-center text-lg text-light-text_muted dark:text-dark-text_muted">
-                        {Data_Management_Label.no_files_imported.label}
-                      </div>
-                    )}
-                  </div>
+                  {/* -------- No Files Imported (Idle State) -------- */}
+                  {showNoFilesImported && (
+                    <div className="p-4 text-center text-lg text-light-text_muted dark:text-dark-text_muted">
+                      {Data_Management_Label.no_files_imported.label}
+                    </div>
+                  )}
                 </div>
-              ) : null}
+              </div>
             </div>
           </div>
 

@@ -8,6 +8,7 @@ const CustomButton = ({
   btn_animation = "",
   icon_animation = "",
   btn_bg_color = "",
+  label_style = "",
 }) => {
   return (
     <button
@@ -28,7 +29,7 @@ const CustomButton = ({
       {/* Label */}
       {label && (
         <span
-          className={`transform transition-transform duration-200 ease-in-out group-hover:${btn_animation}`}
+          className={` ${label_style} transform transition-transform duration-200 ease-in-out group-hover:${btn_animation}`}
         >
           {label}
         </span>

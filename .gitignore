@@ -68,3 +68,7 @@ electron-builder.yml
 
 # Auto-update related artifacts
 __update/
+
+
+# Cline 
+.clineignore

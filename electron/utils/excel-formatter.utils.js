@@ -77,11 +77,6 @@ async function importExcelData(file_Data) {
     });
 
     /*-----------------------------------------------------------*/
-    /* DATABASE INIT */
-    /*-----------------------------------------------------------*/
-    GLOBAL_DB_HANDLE.init();
-
-    /*-----------------------------------------------------------*/
     /* INSERT FILE META DATA */
     /*-----------------------------------------------------------*/
     GLOBAL_DB_HANDLE.getStatement("insertFile").run(
@@ -228,12 +223,20 @@ async function importExcelData(file_Data) {
     /*-----------------------------------------------------------*/
     GLOBAL_DB_HANDLE = new ExcelDatabase(dbconfig_Path);
 
-    // const result_row = GLOBAL_DB_HANDLE.getStatement("getFile").all(
-    //   file_Data.id,
-    // );
-    // console.log(GLOBAL_DB_HANDLE);
+    /*-----------------------------------------------------------*/
+    /* DATABASE INIT */
+    /*-----------------------------------------------------------*/
+    GLOBAL_DB_HANDLE.init();
 
-    // console.log(result_row, file_Data);
+    // ✅ Check if file already exists in DB
+    const existingFile = GLOBAL_DB_HANDLE.getStatement("getFile").get(
+      file_Data.id,
+    );
+
+    if (existingFile) {
+      parentPort.postMessage({ type: "done", result: { skipped: true } });
+      return;
+    }
 
     const importResult = await importExcelData(file_Data);
     /*-----------------------------------------------------------*/

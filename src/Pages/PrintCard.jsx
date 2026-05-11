@@ -1,16 +1,3 @@
-// import React from 'react'
-
-// const PrintCard = () => {
-//   return (
-//     <div>
-//       printCards
-
-//     </div>
-//   )
-// }
-
-// export default PrintCard
-
 import React, { useState, useRef, useEffect } from "react";
 import {
   Printer,

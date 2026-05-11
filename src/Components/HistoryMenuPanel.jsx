@@ -12,7 +12,7 @@ const HistoryMenuPanel = ({ file_id, onReloadShow }) => {
       await onReloadShow();
     } else {
       console.error(
-        `[DataDashBoard:handleDeleteSelected()] : ${c_result.error}`
+        `[DataDashBoard:handleDeleteSelected()] : ${c_result.error}`,
       );
     }
   }
@@ -39,7 +39,9 @@ const HistoryMenuPanel = ({ file_id, onReloadShow }) => {
         btn_bg_color=" w-full rounded-md p-[6px] gap-3
           bg-light-card dark:bg-dark-card
           text-light-text1 dark:text-dark-text1
-          hover:bg-input-light-label_secondary hover:dark:bg-input-dark-label_secondary"
+          hover:text-button-primary-text hover:dark:text-button-primary-text
+          hover:bg-button-primary hover:dark:bg-button-primary
+          "
         label={data_control_icon.open_file.label}
         iconSize={`w-[24px] h-[24px] `}
         iconSrc={data_control_icon.open_file.icon}
@@ -50,7 +52,7 @@ const HistoryMenuPanel = ({ file_id, onReloadShow }) => {
 
       <CustomButton
         btn_bg_color="w-full rounded-md p-[6px] gap-3
-          bg-button-danger-100
+          bg-button-danger
           text-button-danger-text
           hover:bg-button-danger-hover"
         label={data_control_icon.trash.label}

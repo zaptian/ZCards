@@ -89,9 +89,12 @@ async function runWorker(file_meta_data, dbconfig_Path) {
         }
 
         if (message.type === "done") {
-          console.log("[message:runworker][done] : ", message);
-          resolve({
-            status: true,
+          console.log("[message:runworker][done] : ", message.result);
+          if (message?.result?.skipped) {
+            return resolve({ skippedStatus: true });
+          }
+          return resolve({
+            doneStatus: true,
             sheetsData: message.result,
           });
         }
@@ -107,7 +110,7 @@ async function runWorker(file_meta_data, dbconfig_Path) {
       /*---------------------------------------------------------*/
       worker_handle.on("error", (err) => {
         console.error("[worker:error] : ", err);
-        reject(err);
+        return reject(err);
       });
 
       /*---------------------------------------------------------*/
@@ -119,7 +122,7 @@ async function runWorker(file_meta_data, dbconfig_Path) {
             "[worker:exit] : ",
             `Worker stopped with exit code ${code}`,
           );
-          reject(new Error(`Worker stopped with exit code ${code}`));
+          return reject(new Error(`Worker stopped with exit code ${code}`));
         }
       });
     });
@@ -134,11 +137,11 @@ async function runWorker(file_meta_data, dbconfig_Path) {
  */
 function registerFetchFileHandlers() {
   /*-------------------------------------------------
-   * IPC: [fetch:data]
+   * IPC: [fetch:Data]
    * Purpose : Used to open the file and extract the data
    * Returns : { status: boolean, error?: string }
    *------------------------------------------------*/
-  ipcMain.handle("fetch:data", async (_, payload) => {
+  ipcMain.handle("fetch:Data", async (_, payload) => {
     try {
       const file_Id = payload.file_id;
       const workspace = getWorkspacePath();
@@ -172,7 +175,16 @@ function registerFetchFileHandlers() {
       const file_meta_data = indexData?.fileData?.files?.[file_Id];
       result = await runWorker(file_meta_data, dbconfig_Path);
 
-      if (result?.sheetsData) {
+      if (result?.skippedStatus) {
+        historyData = await readFile_Meta_Data(history_file_path);
+        if (historyData?.status) {
+          historyData = {
+            ...historyData?.fileData,
+          };
+        }
+      }
+
+      if (result?.doneStatus) {
         historyData = await readFile_Meta_Data(history_file_path);
         if (historyData?.status) {
           historyData = {
@@ -201,11 +213,11 @@ function registerFetchFileHandlers() {
 
       return {
         status: true,
-        payload_result: result?.sheetsData || {},
+        payload_result: historyData?.sheetsData || {},
         payload_file: file_meta_data,
       };
     } catch (error) {
-      console.error("[fetch:data] Failed :", error);
+      console.error("[fetch:Data] Failed :", error);
       return { status: false, error: error.message };
     }
   });
@@ -217,7 +229,6 @@ function registerFetchFileHandlers() {
    *------------------------------------------------*/
   ipcMain.handle("fetch:DataRange", async (_, payload) => {
     try {
-      console.log("[fetch:DataRange]:", payload);
       const { fileID, sheetName, startRow, endRow } = payload;
 
       if (!fileID || !sheetName) {
@@ -276,15 +287,14 @@ function registerFetchFileHandlers() {
     try {
       const file_Id = payload?.fileID;
       const sheetName = payload?.sheetName;
-
+      let historyData = {};
       const history_file_path = path.join(
         getSectionPath(WORKSPACE_STRUCTURE.HISTORY),
         `${file_Id}.json`,
       );
 
-      let historyData = {};
-
       historyData = await readFile_Meta_Data(history_file_path);
+
       if (historyData?.status) {
         historyData = {
           ...historyData?.fileData,
@@ -297,6 +307,107 @@ function registerFetchFileHandlers() {
     } catch (error) {
       console.error("[add:FormData] : ", error);
       return { status: false };
+    }
+  });
+
+  /*-------------------------------------------------
+   * IPC: [fetch:FormData]
+   * Purpose : Used to fetch form data from file.
+   * Returns : { status: boolean }
+   *------------------------------------------------*/
+  ipcMain.handle("fetch:FormData", async (_, payload) => {
+    try {
+      const fileID = payload?.fileID;
+      const sheetName = payload?.sheetName;
+      let headerRowData = {};
+      let historyData = {};
+      let sheetFormData = {};
+      let headerData = [];
+
+      if (!fileID || !sheetName) {
+        return { status: false, error: "Missing fileID or sheetName" };
+      }
+
+      const history_file_path = path.join(
+        getSectionPath(WORKSPACE_STRUCTURE.HISTORY),
+        `${fileID}.json`,
+      );
+
+      historyData = await readFile_Meta_Data(history_file_path);
+
+      if (!historyData?.status) {
+        throw new Error("Failed to read file metadata");
+      }
+
+      historyData = historyData?.fileData?.[sheetName];
+      if (!historyData) {
+        throw new Error("No sheet data available");
+      }
+
+      headerRowData = GLOBAL_DB_HANDLE.getStatement("getSheetRows").all(
+        fileID,
+        sheetName,
+        historyData?.headerRow,
+        historyData?.headerRow,
+      );
+
+      if (headerRowData[0]?.data) {
+        headerData = JSON.parse(headerRowData[0]?.data) || [];
+        headerData = headerData.reduce((objValue, data, index) => {
+          objValue[index] = data;
+          return objValue;
+        }, {});
+      }
+
+      sheetFormData = {
+        headerRow: historyData?.headerRow,
+        columnheader: historyData?.headerColumn,
+        dataRow: historyData?.dataRow,
+        headerData: headerData,
+      };
+      console.log("[fetch:FormData] : ", sheetFormData);
+      return { status: true, response: sheetFormData };
+    } catch (error) {
+      console.error("[fetch:FormData] : ", error);
+      return { status: false, error: error.message ?? String(error) };
+    }
+  });
+
+  /*-------------------------------------------------
+   * IPC: [update:EditedData]
+   * Purpose : Used to update data to the file.
+   * Returns : { status: boolean }
+   *------------------------------------------------*/
+  ipcMain.handle("update:EditedData", async (_, payload) => {
+    try {
+      const { fileID, sheetName, editedData } = payload;
+
+      const runTransaction = GLOBAL_DB_HANDLE.dbHandler.transaction((edits) => {
+        for (const { rowIndex, colIndex, value } of edits) {
+          GLOBAL_DB_HANDLE.getStatement("updateCellData").run(
+            colIndex,
+            value,
+            fileID,
+            sheetName,
+            rowIndex + 1,
+          );
+        }
+      });
+
+      // 🔥 EXECUTE FIRST
+      runTransaction(editedData);
+      for (const { rowIndex } of editedData) {
+        const rowData = GLOBAL_DB_HANDLE.getStatement("getOneSheetRow").get(
+          fileID,
+          sheetName,
+          rowIndex + 1,
+        );
+      }
+
+      return { status: true };
+    } catch (error) {
+      console.error(error);
+      return { status: false, error: error.message };
     }
   });
 }

@@ -211,6 +211,34 @@ class ExcelDatabase {
         ORDER BY row ASC;
       `),
     );
+
+    /*--------------------------------------------
+     * GET ONE ROW DATA QUERY
+     *--------------------------------------------*/
+    this.statements.set(
+      "getOneSheetRow",
+      this.dbHandler.prepare(
+        `SELECT data FROM excel_rows 
+        WHERE file_id = ? 
+        AND sheet = ? 
+        AND row = ?;`,
+      ),
+    );
+
+    /*--------------------------------------------
+     * UPDATE DATA QUERY
+     *--------------------------------------------*/
+    this.statements.set(
+      "updateCellData",
+      this.dbHandler.prepare(`
+        UPDATE excel_rows
+        SET data = json_set(data, '$[' || CAST(? AS INTEGER) || ']', ?),
+            updated_at = unixepoch()
+        WHERE file_id = ?
+          AND sheet = ?
+          AND row = ?
+      `),
+    );
   }
 
   /*-------------------------------------------------

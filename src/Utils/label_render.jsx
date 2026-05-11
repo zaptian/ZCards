@@ -147,12 +147,44 @@ export const DataEditor_Label = {
     label: "Excel",
   },
 
+  saveData_label: {
+    label: "Save Data",
+  },
+
+  openEditor_label: {
+    label: "Open Editor",
+  },
+
   title_open_sidepanel: {
     title: "Open Panel",
   },
 
   title_close_sidepanel: {
     title: "Close Panel",
+  },
+
+  cell_editor_label: {
+    label: "Cell Editor",
+  },
+
+  header_field_label: {
+    label: "Header Fields",
+  },
+
+  field_id_label: {
+    label: "field_id",
+  },
+
+  header_id_label: {
+    label: "header",
+  },
+
+  revert_label: {
+    label: "Revert",
+  },
+
+  back_label: {
+    label: "Back",
   },
 };
 
@@ -167,5 +199,47 @@ export const DataEditor_message = {
     message_type: "success",
     reason: "Cell data copied to clipboard",
     message: "Data copied successfully.",
+  },
+
+  save_data_message: {
+    message_type: "success",
+    reason: "save sidebar form data",
+    message: "Data saved successfully.",
+  },
+
+  changes_save_message: {
+    message_type: "success",
+    reason: "Save updated cell data",
+    message: "Changes saved successfully.",
+  },
+
+  failed_changes_save_meaage: {
+    message_type: "error",
+    reason: "Save Data Failed ",
+    message: "Failed to save changes. Please try again.",
+  },
+};
+
+export const ToastMessageType = {
+  success: "success",
+  warning: "warning",
+  error: "error",
+};
+
+export const PhotoEditor_Label = {
+  header_Label: {
+    label: "Photo Editor",
+  },
+
+  folder_actions_label: {
+    label: "Folder Actions",
+  },
+
+  recent_folder_label: {
+    label: "Recent Folder",
+  },
+
+  folder_import_label: {
+    label: "Import Image",
   },
 };

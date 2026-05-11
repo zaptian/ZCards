@@ -29,7 +29,7 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
   const [subnavSelected, setSubNavSelected] = useState("");
   const [showDesignerMenu, setShowDesignerMenu] = useState(false);
   const [showDataManagerMenu, setshowDataManagerMenu] = useState(false);
-  const [ThemeMode, setThemeMode] = useState(false);
+  const [ThemeMode, setThemeMode] = useState(true);
 
   const hideTimers = {
     designer: null,
@@ -111,7 +111,7 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
       <header
         className={`${
           isExpanded ? "nav-expanded" : "nav-shrink"
-        } flex-box-col bg-light-card dark:bg-dark-card`}
+        } flex-box-col bg-light-card2 dark:bg-dark-card`}
         id="Navbar"
       >
         {/* Top Navigation */}
@@ -210,7 +210,7 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
         )}
 
         {/* Data Manager - SUBMENU */}
-        {showDataManagerMenu && (
+        {/* {showDataManagerMenu && (
           <div
             className={`
               absolute 
@@ -251,7 +251,7 @@ const NavigationItems = ({ isExpanded, setIsExpanded }) => {
               </div>
             ))}
           </div>
-        )}
+        )} */}
 
         {/* Bottom Navigation */}
         <div className="relative bottom-0">

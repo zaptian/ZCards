@@ -13,7 +13,7 @@ const NavigationTitleBar = ({ isExpanded, setIsExpanded }) => {
   }, []);
 
   return (
-    <div className="title-bar flex flex-row bg-light-card dark:bg-dark-card">
+    <div className="title-bar flex flex-row bg-light-card2 dark:bg-dark-card">
       {/* Header Section */}
       <div className="flex flex-row items-center gap-[20px]">
         {/* Logo */}
