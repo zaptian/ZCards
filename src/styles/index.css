@@ -229,6 +229,20 @@ input:-webkit-autofill {
 .animate-slide-in {
   animation: slide-in 0.2s ease-out;
 }
+
+@keyframes bounce-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.animate-bounce-soft {
+  animation: bounce-soft 1.5s ease-in-out infinite;
+}
 /* ------------------------------------------------------------ */
 
 #Home {

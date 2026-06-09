@@ -1,3 +1,4 @@
+
 export const Data_Management_Label = {
   Data_Management: {
     label: "Data Management",
@@ -148,7 +149,7 @@ export const DataEditor_Label = {
   },
 
   saveData_label: {
-    label: "Save Data",
+    label: "Save Details",
   },
 
   openEditor_label: {
@@ -168,7 +169,11 @@ export const DataEditor_Label = {
   },
 
   header_field_label: {
-    label: "Header Fields",
+    label: "Fields",
+  },
+
+  changes_label: {
+    label: "Changes",
   },
 
   field_id_label: {
@@ -186,7 +191,129 @@ export const DataEditor_Label = {
   back_label: {
     label: "Back",
   },
+
+  record_label: {
+    label: "Records"
+  },
+
+  sheets_label: {
+    label: "Sheets"
+  },
 };
+
+export const DataEditor_Side_Panel_Label = {
+  Sheet_configuration: {
+    label: "Sheet Configuration",
+  },
+  Define_the_range_and_headers: {
+    label: "Define the range and headers",
+  },
+  header_row: {
+    label: "Header Row",
+    key: "headerRow",
+    type: "number",
+    singleValue: true,
+  },
+  column: {
+    label: "Column",
+    key: "column",
+    type: "text",
+    singleValue: false,
+  },
+  data_row: {
+    label: "Data Row",
+    key: "dataRow",
+    type: "number",
+    singleValue: false,
+  },
+}
+
+export const DataEditor_Fields_Label = {
+
+  no_fields_detected: {
+    label: "No Fields Detected",
+  },
+  
+  configure_sheet_settings: {
+    label: "Configure sheet settings to see headers",
+  },
+}
+
+export const DataEditor_Modified_Data_Label = {
+  modified_data_label: {
+    label: "Modified Data"
+  },
+
+  record_label: {
+    label: "Records"
+  },
+
+  no_modified_data_message: {
+    label: "No Modified Data"
+  },
+  
+  revert_label: {
+    label: "Revert"
+  },
+  original_label: {
+    label: "Original"
+  },
+  updated_label: {
+    label: "Updated"
+  },
+  empty_label: {
+    label: "Empty"
+  }
+}
+
+export const DataEditor_Cell_Editor_Label = {
+  selected_cell_label: {
+    label: "Selected Cell",
+  },
+  pending_changes_label: {
+    label: "Pending changes",
+  },
+  cell_editor_content_label: {
+    label: "Cell Content",
+  },
+  chars_label: {
+    label: "chars"
+  },
+  revert_label:{
+    label:"Revert"
+  },
+  already_saved_label: {
+    label: "Already Saved",
+  },
+  discard_label: {
+    label:"Discard"
+  },
+  type_something_here_placeholder_label: {
+    label: "Type something here..."
+  },
+  select_cell_to_edit_placeholder_label: {
+    label: "Select a cell to edit"
+  }
+}
+
+export const DataEditor_Discard_Label = {
+  unsaved_changes: {
+    label: "Unsaved Changes",
+  },
+  
+  descption_message: {
+    label: `You have unsaved changes in the following sheets. Would you like to save them before leaving?`,
+  },
+
+  discard_all_label: {
+    label: "Discard All",
+  },
+  
+  save_changes_label: {
+    label: "Save Changes",
+  },
+  
+}
 
 export const DataEditor_message = {
   sidebar_pinned_message: {

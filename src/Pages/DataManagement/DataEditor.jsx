@@ -13,22 +13,40 @@ import {
 } from "react";
 
 import {
-  ArrowLeftCircle,
-  ArrowRightSquareIcon,
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
   ChevronLeft,
+  ChevronRight,
+  Columns,
   CopyIcon,
-  IterationCw,
+  Edit3,
+  Hash,
+  Layout,
+  MousePointer2,
   PinIcon,
   PinOff,
+  Rows,
+  Save,
   TableIcon,
+  Trash2,
+  Undo2,
+  LayoutList,
+  FileText,
+  X,
 } from "lucide-react";
 
 import CustomButton from "../../Components/CustomButton";
 import { useToast } from "../../Components/ToastMessage/ToastContext";
 import { FileImport_Error_Message } from "../../Utils/error_message_render";
 import {
+  DataEditor_Cell_Editor_Label,
+  DataEditor_Discard_Label,
+  DataEditor_Fields_Label,
   DataEditor_Label,
   DataEditor_message,
+  DataEditor_Modified_Data_Label,
+  DataEditor_Side_Panel_Label,
   ToastMessageType,
 } from "../../Utils/label_render";
 import CustomLabel from "../../Components/CustomLabel";
@@ -238,6 +256,7 @@ const ColumnHeaderComponent = ({
   width,
   scrollLeft,
   selectedColumn,
+  hasVerticalScrollbar = false,
 }) => {
   const colRenderer = useCallback(
     ({ columnIndex, key, style }) => {
@@ -254,20 +273,41 @@ const ColumnHeaderComponent = ({
   );
 
   return (
-    <Grid
-      columnCount={colCount}
-      rowCount={1}
-      columnWidth={COLUMN_WIDTH}
-      rowHeight={ROW_HEIGHT}
-      height={ROW_HEIGHT}
-      width={width}
-      scrollLeft={scrollLeft}
-      cellRenderer={colRenderer}
-      overscanColumnCount={SCAN_COLUMN_COUNT}
-      scrollTop={0}
-      style={{ overflowX: "hidden", borderTopRightRadius: "8px" }}
-      scrollingResetTimeInterval={0}
-    />
+    <>
+      <style>{`
+        .header-scroll-hidden::-webkit-scrollbar {
+          background: transparent !important;
+        }
+        .header-scroll-hidden::-webkit-scrollbar-thumb {
+          background: transparent !important;
+        }
+        .header-scroll-hidden::-webkit-scrollbar-button {
+          display: none !important;
+        }
+        .header-scroll-hidden {
+          scrollbar-color: transparent transparent;
+        }
+      `}</style>
+      <Grid
+        className="custom-scroll header-scroll-hidden"
+        columnCount={colCount}
+        rowCount={1}
+        columnWidth={COLUMN_WIDTH}
+        rowHeight={ROW_HEIGHT}
+        height={ROW_HEIGHT}
+        width={width}
+        scrollLeft={scrollLeft}
+        cellRenderer={colRenderer}
+        overscanColumnCount={SCAN_COLUMN_COUNT}
+        scrollTop={0}
+        style={{
+          overflowX: "hidden",
+          overflowY: hasVerticalScrollbar ? "scroll" : "hidden",
+          borderTopRightRadius: "8px",
+        }}
+        scrollingResetTimeInterval={0}
+      />
+    </>
   );
 };
 /*--------------------------------------------------------------- */
@@ -326,7 +366,8 @@ const ExcelTableView = memo(
     const [copiedCell, setCopiedCell] = useState(false);
     const [rowCache, setRowCache] = useState({});
     const [containerWidth, setContainerWidth] = useState(0);
-    const [containerHeight, setContainerHeight] = useState(GRID_VIEWPORT_HEIGHT);
+    const [containerHeight, setContainerHeight] =
+      useState(GRID_VIEWPORT_HEIGHT);
     const [scrollLeft, setScrollLeft] = useState(0);
     const [scrollTop, setScrollTop] = useState(0);
 
@@ -612,20 +653,28 @@ const ExcelTableView = memo(
           shadow-sm
         `}
       >
-        <div className="flex h-full">
+        <div className="flex h-full overflow-hidden">
           <RowHeaderComponent
             rowCount={effectiveRowCount + 1}
             height={containerHeight}
             scrollTop={scrollTop}
             selectedRow={selectedCell?.rowIndex}
           />
-          <div className="flex flex-col flex-1">
+          <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
             <div>
               <ColumnHeaderComponent
                 colCount={effectiveColCount}
                 width={gridViewportWidth}
                 scrollLeft={scrollLeft}
                 selectedColumn={selectedCell?.colIndex}
+                hasVerticalScrollbar={
+                  effectiveRowCount * ROW_HEIGHT >
+                  containerHeight -
+                    ROW_HEIGHT -
+                    (effectiveColCount * COLUMN_WIDTH > gridViewportWidth
+                      ? 15
+                      : 0)
+                }
               />
             </div>
             <Grid
@@ -655,7 +704,7 @@ const ExcelTableView = memo(
 /*--------------------------------------------------------------- */
 /**
  * @function  ExcelSidePanel => memo
- * @purpose   To Make a view of Excel Side Panel Data
+ * @purpose   To make Excel data entry side panel
  */
 const ExcelSidePanel = memo(function SidePanel({
   gridFileID,
@@ -664,39 +713,73 @@ const ExcelSidePanel = memo(function SidePanel({
   isEditorEnabledPanel,
   formDataCache,
   onFormSaved,
+  formData,
+  setFormData,
+  isPanelEditorEnabled,
+  setIsPanelEditorEnabled,
 }) {
   const { addToast: ToastMessage } = useToast();
-  const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  const [formData, setFormData] = useState({
-    headerRow: { value: "" },
-    column: { from: "", to: "" },
-    dataRow: { from: "", to: "" },
-  });
 
   const formElement = [
     {
-      label: "Header Row",
-      key: "headerRow",
-      type: "number",
-      singleValue: true,
+      label: DataEditor_Side_Panel_Label?.header_row?.label,
+      key: DataEditor_Side_Panel_Label?.header_row?.key,
+      type: DataEditor_Side_Panel_Label?.header_row?.type,
+      singleValue: DataEditor_Side_Panel_Label?.header_row?.singleValue,
+      icon: (
+        <Layout size={16} className="text-icon-bg dark:text-icon_dark-bg" />
+      ),
     },
-    { label: "Column", key: "column", type: "text", singleValue: false },
-    { label: "Data Row", key: "dataRow", type: "number", singleValue: false },
+    {
+      label: DataEditor_Side_Panel_Label?.column?.label,
+      key: DataEditor_Side_Panel_Label?.column?.key,
+      type: DataEditor_Side_Panel_Label?.column?.type,
+      singleValue: DataEditor_Side_Panel_Label?.column?.singleValue,
+      icon: (
+        <Columns size={16} className="text-icon-bg dark:text-icon_dark-bg" />
+      ),
+    },
+    {
+      label: DataEditor_Side_Panel_Label?.data_row?.label,
+      key: DataEditor_Side_Panel_Label?.data_row?.key,
+      type: DataEditor_Side_Panel_Label?.data_row?.type,
+      singleValue: DataEditor_Side_Panel_Label?.data_row?.singleValue,
+      icon: <Rows size={16} className="text-icon-bg dark:text-icon_dark-bg" />,
+    },
   ];
 
   const fieldStructure = {
-    headerRow: { type: "number", label: "Header Row", singleValue: true },
-    column: { type: "text", label: "Column", singleValue: false },
-    dataRow: { type: "number", label: "Data Row", singleValue: false },
+    headerRow: {
+      type: DataEditor_Side_Panel_Label?.header_row?.type,
+      label: DataEditor_Side_Panel_Label?.header_row?.label,
+      singleValue: DataEditor_Side_Panel_Label?.header_row?.singleValue,
+    },
+    column: {
+      type: DataEditor_Side_Panel_Label?.column?.type,
+      label: DataEditor_Side_Panel_Label?.column?.label,
+      singleValue: DataEditor_Side_Panel_Label?.column?.singleValue,
+    },
+    dataRow: {
+      type: DataEditor_Side_Panel_Label?.data_row?.type,
+      label: DataEditor_Side_Panel_Label?.data_row?.label,
+      singleValue: DataEditor_Side_Panel_Label?.data_row?.singleValue,
+    },
   };
 
   /*-----------------------------------------------------------*/
   /* INITIALIZE FORM DATA */
   /*-----------------------------------------------------------*/
   useEffect(() => {
-    if (!formDataCache) return;
+    const isConfigured =
+      formDataCache &&
+      (formDataCache.headerRow !== undefined ||
+        formDataCache.columnheader ||
+        formDataCache.dataRow);
+
+    if (!isConfigured) {
+      return;
+    }
 
     setFormData(() => {
       return {
@@ -796,7 +879,7 @@ const ExcelSidePanel = memo(function SidePanel({
   /* HANDLE SAVE FORM DATA */
   /*-----------------------------------------------------------*/
   const handleSave = async () => {
-    setIsEditorEnabled(false);
+    setIsPanelEditorEnabled(false);
     setIsLoading(true);
 
     const error = validateFormData(formData);
@@ -823,9 +906,17 @@ const ExcelSidePanel = memo(function SidePanel({
         DataEditor_message.save_data_message.message_type,
       );
       onFormSaved?.();
+      setIsPanelEditorEnabled(true);
+    } else {
+      // Re-enable if it was already configured previously
+      const isConfigured =
+        formDataCache &&
+        (formDataCache.headerRow !== undefined ||
+          formDataCache.columnheader ||
+          formDataCache.dataRow);
+      setIsPanelEditorEnabled(!!isConfigured);
     }
 
-    setIsEditorEnabled(true);
     setIsLoading(false);
   };
 
@@ -868,100 +959,142 @@ const ExcelSidePanel = memo(function SidePanel({
   /* INPUT CLASS NAME SELECT */
   /*-----------------------------------------------------------*/
   const inputClass = (type) => `
-    h-[40px] px-3 w-full text-sm font-bold rounded-md
-    bg-input-light-background dark:bg-input-dark-background
-    border-[1px] border-input-light-border dark:border-input-dark-border
-    text-input-light-text dark:text-input-dark-text
-    placeholder:input-light-placeholder dark:placeholder:input-light-placeholder
-    focus:outline-none focus:ring-2 focus:input-light-border_focus
+    h-[38px] px-3 w-full text-sm font-semibold rounded-md
+    bg-light-card2 dark:bg-dark-card2
+    border border-light-border dark:border-dark-border
+    text-light-text2 dark:text-dark-text2
+    placeholder:text-light-placeholder dark:placeholder:text-dark-placeholder
+    focus:outline-none focus:ring-2 focus:ring-icon-bg focus:border-icon_dark-bg
+    transition-all duration-200
     ${type === "number" ? "no-number-arrows" : "uppercase"}
   `;
 
   return (
-    <div className="w-full h-full px-3 py-2">
-      <div className="mt-4 space-y-4">
-        {formElement.map(({ label, key, type, singleValue }) => (
-          <div
-            key={key}
-            className="grid grid-cols-[140px_1fr] gap-4 items-center"
-          >
-            <CustomLabel
-              title={label}
-              label_text={label}
-              required={true}
-              label_style="text-sm font-medium text-light-text dark:text-dark-text"
-            />
+    <div className="w-full h-full p-5 flex flex-col">
+      {/* Header Section */}
+      <div className="flex items-center gap-2 mb-6">
+        <div className="p-2 rounded-lg bg-icon-50 dark:bg-icon_dark-900 text-icon-bg dark:text-icon_dark-bg">
+          <TableIcon size={20} />
+        </div>
+        <div>
+          <div className="text-base font-semibold text-light-text dark:text-dark-text">
+            Sheet Configuration
+          </div>
+          <div className="text-xs text-light-text2 dark:text-dark-text2 opacity-70">
+            Define the range and headers
+          </div>
+        </div>
+      </div>
 
-            {singleValue ? (
-              // ── Single input (Header Row) ──────────────────
-              <CustomInput
-                type={type}
-                input_placeholder={gridDataCount.gridRowData.minCount}
-                search_text={formData[key].value}
-                onChange_Access={handleSingleChange(key)}
-                input_classname={inputClass(type)}
-              />
-            ) : (
-              // ── From / To inputs (Column, Data Row) ────────
-              <div className="flex gap-3">
-                <CustomInput
-                  type={type}
-                  input_placeholder={
-                    type === "text"
-                      ? gridDataCount.gridColData.minCount
-                      : gridDataCount.gridRowData.minCount + 1
-                  }
-                  search_text={formData[key].from}
-                  onChange_Access={handleRangeChange(key, "from")}
-                  input_classname={inputClass(type)}
-                />
-                <CustomInput
-                  type={type}
-                  input_placeholder={
-                    type === "text"
-                      ? gridDataCount.gridColData.maxCount
-                      : gridDataCount.gridRowData.maxCount
-                  }
-                  search_text={formData[key].to}
-                  onChange_Access={handleRangeChange(key, "to")}
-                  input_classname={inputClass(type)}
-                />
-              </div>
-            )}
+      {/* Form Section */}
+      <div className="flex-1 space-y-6">
+        {formElement.map(({ label, key, type, singleValue, icon }) => (
+          <div key={key} className="space-y-2">
+            <div className="flex items-center gap-2 px-1">
+              {icon}
+              <span className="text-xs font-bold uppercase tracking-wider text-light-text2 dark:text-dark-text2 opacity-80">
+                {label}
+              </span>
+            </div>
+
+            <div className="bg-light-card1 dark:bg-dark-card1 p-3 rounded-lg border border-light-border dark:border-dark-border">
+              {singleValue ? (
+                <div className="relative group">
+                  <label className="absolute -top-2 left-3 px-1 text-[10px] font-bold text-icon-bg dark:text-icon_dark-bg bg-light-card dark:bg-dark-card z-10 transition-colors duration-200">
+                    Value
+                  </label>
+                  <CustomInput
+                    type={type}
+                    input_placeholder={gridDataCount.gridRowData.minCount}
+                    search_text={formData[key].value}
+                    onChange_Access={handleSingleChange(key)}
+                    input_classname={inputClass(type)}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 relative group">
+                    <label className="absolute -top-2 left-3 px-1 text-[10px] font-bold text-icon-bg dark:text-icon_dark-bg bg-light-card dark:bg-dark-card z-10 transition-colors duration-200">
+                      From
+                    </label>
+                    <CustomInput
+                      type={type}
+                      input_placeholder={
+                        type === "text"
+                          ? gridDataCount.gridColData.minCount
+                          : gridDataCount.gridRowData.minCount + 1
+                      }
+                      search_text={formData[key].from}
+                      onChange_Access={handleRangeChange(key, "from")}
+                      input_classname={inputClass(type)}
+                    />
+                  </div>
+                  <div className="flex-1 relative group">
+                    <label className="absolute -top-2 left-3 px-1 text-[10px] font-bold text-icon-bg dark:text-icon_dark-bg bg-light-card dark:bg-dark-card z-10 transition-colors duration-200">
+                      To
+                    </label>
+                    <CustomInput
+                      type={type}
+                      input_placeholder={
+                        type === "text"
+                          ? gridDataCount.gridColData.maxCount
+                          : gridDataCount.gridRowData.maxCount
+                      }
+                      search_text={formData[key].to}
+                      onChange_Access={handleRangeChange(key, "to")}
+                      input_classname={inputClass(type)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="flex justify-end gap-3 mt-6">
+      {/* Action Buttons */}
+      <div className="pt-6 border-t border-light-border dark:border-dark-border flex flex-col gap-3">
+        {/* Save Button */}
         <CustomButton
           label={
-            isLoading ? (
-              <LoadingCircle />
-            ) : (
-              DataEditor_Label.saveData_label.label
-            )
+            <div className="flex items-center justify-center gap-2 w-full">
+              {isLoading ? (
+                <LoadingCircle />
+              ) : (
+                <>
+                  <Save size={18} />
+                  <span>{DataEditor_Label.saveData_label.label}</span>
+                </>
+              )}
+            </div>
           }
           onClick={handleSave}
           disabled={isLoading}
           btn_bg_color="
-            inline-flex items-center justify-center
-            h-[40px] px-3 py-2 rounded-md text-sm font-medium
+            w-full h-[44px] rounded-xl text-sm font-bold
             bg-button-primary hover:bg-button-primary-hover
-            text-white transition-colors
+            text-button-primary-text shadow-lg shadow-button-primary/20
+            transition-all duration-200 active:scale-[0.98]
           "
         />
 
+        {/* Open Editor */}
         <CustomButton
-          label={DataEditor_Label.openEditor_label.label}
-          disabled={!isEditorEnabled}
+          label={
+            <div className="flex items-center justify-center gap-2 w-full">
+              <Edit3 size={18} />
+              <span>{DataEditor_Label.openEditor_label.label}</span>
+            </div>
+          }
+          disabled={!isPanelEditorEnabled}
           onClick={handleEdit}
           btn_bg_color={`
-            inline-flex items-center justify-center
-            h-[40px] px-3 py-2 rounded-md text-sm font-medium
+            w-full h-[44px] rounded-xl text-sm font-bold
+            transition-all duration-200 active:scale-[0.98]
             ${
-              isEditorEnabled
-                ? "bg-button-success hover:bg-button-success-hover text-white"
-                : "bg-gray-300 text-light-text_muted dark:text-dark-text_muted cursor-not-allowed"
+              isPanelEditorEnabled
+                ? "bg-button-success hover:bg-button-success-hover text-button-success-text shadow-lg shadow-button-success/20"
+                : "bg-light-label2 dark:bg-dark-label2 text-light-text1 dark:text-dark-text1 cursor-not-allowed"
             }
           `}
         />
@@ -976,295 +1109,442 @@ const ExcelSidePanel = memo(function SidePanel({
  * @function  ExcelGridContainer => memo
  * @purpose   To Make a view of Excel Grid Container
  */
-const ExcelGridContainer = memo(function ExcelGridContainer({
-  grid,
-  gridFileID,
-  SheetNameSelected,
-  ToastMessage,
-}) {
-  const [isOpen, setIsOpen] = useState(true);
-  const [isPinned, setIsPinned] = useState(true);
-  const showPanel = isOpen || isPinned;
-
-  const [isEditorEnabled, setIsEditorEnabled] = useState(false);
-  const [formDataCache, setFormDataCache] = useState(null); //{ columnheader, dataRow, headerRow, headerData}
-  const [selectedCell, setSelectedCell] = useState(null); // { rowIndex, colIndex, rawValue }
-  const [editedCellsBySheet, setEditedCellsBySheet] = useState({});
-  const [editorInputValue, setEditorInputValue] = useState("");
-  const [headerColTrigger, setHeaderColTrigger] = useState(0);
-
-  const tableRef = useRef(null);
-
-  /*-----------------------------------------------------------*/
-  /* MANAGE GRID DATA */
-  /*-----------------------------------------------------------*/
-  if (!grid) {
-    return <div className="text-sm text-gray-500">No sheet data available</div>;
-  }
-
-  /*-----------------------------------------------------------*/
-  /* MANAGE GRID DATA COUNT */
-  /*-----------------------------------------------------------*/
-  const gridDataCount = useMemo(
-    () => ({
-      gridRowData: { minCount: 1, maxCount: grid.rowCount },
-      gridColData: {
-        minCount: "A",
-        maxCount: getExcelColumnName(grid.colCount - 1),
-      },
-    }),
-    [grid],
-  );
-
-  /*-----------------------------------------------------------*/
-  /* FORCE REFRESH EFFECT GENERATION */
-  /*-----------------------------------------------------------*/
-  const refreshHeaderColumns = useCallback(() => {
-    setHeaderColTrigger((t) => t + 1);
-  }, []);
-
-  /*-----------------------------------------------------------*/
-  /* CONVERT COLUMN HEADER TO INDEX */
-  /*-----------------------------------------------------------*/
-  const columnToIndex = (value) =>
-    value
-      .toUpperCase()
-      .split("")
-      .reduce((acc, char) => acc * 26 + (char.charCodeAt(0) - 64), 0);
-
-  /*-----------------------------------------------------------*/
-  /* RESET DATA ON SHEET CHANGES */
-  /*-----------------------------------------------------------*/
-  useEffect(() => {
-    setSelectedCell(null);
-    setEditorInputValue("");
-  }, [SheetNameSelected]);
-
-  /*-----------------------------------------------------------*/
-  /* RESET ON EDITOR MODE EXIT */
-  /*-----------------------------------------------------------*/
-  useEffect(() => {
-    if (!isEditorEnabled) {
-      setSelectedCell(null);
-      setEditorInputValue("");
-    }
-  }, [isEditorEnabled]);
-
-  /*-----------------------------------------------------------*/
-  /* HANDLE CELL SELECT */
-  /*-----------------------------------------------------------*/
-  const handleCellSelect = useCallback(
-    (rowIndex, colIndex, rawValue) => {
-      setSelectedCell({ rowIndex, colIndex, rawValue });
-      setEditorInputValue(rawValue ?? "");
+const ExcelGridContainer = memo(
+  forwardRef(function ExcelGridContainer(
+    {
+      grid,
+      gridFileID,
+      SheetNameSelected,
+      ToastMessage,
+      onEditsChange,
+      onSheetsWithEditsChange,
     },
-    [editedCellsBySheet, SheetNameSelected],
-  );
+    ref,
+  ) {
+    const [isOpen, setIsOpen] = useState(true);
+    const [isPinned, setIsPinned] = useState(true);
+    const showPanel = isOpen || isPinned;
 
-  /*-----------------------------------------------------------*/
-  /* HANDLE HEADER COLUMN */
-  /*-----------------------------------------------------------*/
-  const handleHeaderColumns = useMemo(() => {
-    if (!formDataCache) return [];
-    const rowCache = formDataCache?.headerData || [];
-    if (!rowCache) return [];
-    const colFrom = columnToIndex(formDataCache.columnheader?.from) - 1;
-    const colTo = columnToIndex(formDataCache.columnheader?.to) - 1;
-    return buildHeaderColumns(rowCache, colFrom, colTo);
-  }, [formDataCache, headerColTrigger]);
+    const [editorEnabledBySheet, setEditorEnabledBySheet] = useState({});
+    const [panelEnabledBySheet, setPanelEnabledBySheet] = useState({});
+    const [formDataBySheet, setFormDataBySheet] = useState({});
 
-  /*-----------------------------------------------------------*/
-  /* HANDLE DATA EDITED */
-  /*-----------------------------------------------------------*/
-  const handleEditorInputChange = useCallback(
-    (e) => {
-      const value = e.target.value;
-      setEditorInputValue(value);
-
-      if (!selectedCell) return;
-      const key = `${selectedCell.rowIndex}:${selectedCell.colIndex}`;
-      setEditedCellsBySheet((prev) => ({
-        ...prev,
-        [SheetNameSelected]: {
-          ...(prev[SheetNameSelected] ?? {}),
-          [key]: value,
-        },
-      }));
-
-      console.log("Sheet Name Changes : ", editedCellsBySheet);
-    },
-    [selectedCell],
-  );
-
-  /*-----------------------------------------------------------*/
-  /* REVERT UPDATED CELL */
-  /*-----------------------------------------------------------*/
-  const handleRevertCell = useCallback(() => {
-    if (!selectedCell) return;
-    const key = `${selectedCell.rowIndex}:${selectedCell.colIndex}`;
-    setEditorInputValue(selectedCell?.rawValue ?? "");
-    setEditedCellsBySheet((prev) => {
-      const sheetEdits = { ...(prev[SheetNameSelected] ?? {}) };
-      delete sheetEdits[key];
-      return { ...prev, [SheetNameSelected]: sheetEdits };
-    });
-  }, [selectedCell, SheetNameSelected]);
-
-  /*-----------------------------------------------------------*/
-  /* DISCARD ALL EDITS */
-  /*-----------------------------------------------------------*/
-  const handleDiscardAll = useCallback(() => {
-    setEditorInputValue(selectedCell?.rawValue ?? "");
-    /* also revert the cache */
-    tableRef.current?.applyEdits({});
-
-    setEditedCellsBySheet((prev) => ({
-      ...prev,
-      [SheetNameSelected]: {},
-    }));
-  }, [selectedCell, SheetNameSelected]);
-
-  /*-----------------------------------------------------------*/
-  /* HANDEL SAVE BUTTON CLICK */
-  /*-----------------------------------------------------------*/
-  const handleSaveEdits = useCallback(async () => {
-    if (!Object.keys(editedCellsBySheet[SheetNameSelected]).length) return;
-
-    tableRef.current?.applyEdits(editedCellsBySheet[SheetNameSelected]);
-
-    try {
-      console.log("Edited cells : ", editedCellsBySheet[SheetNameSelected]);
-      const result = await window.DataDashBoard_API.updateEditedData({
-        fileID: gridFileID,
-        sheetName: SheetNameSelected,
-        editedData: Object.entries(editedCellsBySheet[SheetNameSelected]).map(
-          ([key, value]) => {
-            const [rowIndex, colIndex] = key.split(":").map(Number);
-            return { rowIndex, colIndex, value };
-          },
-        ),
-      });
-
-      console.log("[DataEdited:handleSaveEdits] : ", result);
-      if (result?.status) {
-        ToastMessage(
-          DataEditor_message.changes_save_message.message,
-          ToastMessageType.success,
-        );
-        setEditedCellsBySheet((prev) => ({
-          ...prev,
-          [SheetNameSelected]: {},
-        }));
-      } else {
-        ToastMessage(
-          DataEditor_message.failed_changes_save_meaage.message,
-          ToastMessageType.error,
-        );
-      }
-    } catch (err) {
-      console.error("[saveEditedCells]", err);
-      ToastMessage("Save failed.", "error");
-    }
-  }, [editedCellsBySheet, gridFileID, SheetNameSelected, ToastMessage]);
-
-  /*-----------------------------------------------------------*/
-  /* EDITED CELL COUNT */
-  /*-----------------------------------------------------------*/
-  const editedCells = editedCellsBySheet[SheetNameSelected] ?? {};
-  const editCount = Object.keys(editedCells).length;
-
-  /*-----------------------------------------------------------*/
-  /* HANDEL BUTTON CLICK */
-  /*-----------------------------------------------------------*/
-  const lockRef = useRef(false);
-  const handleClick = (setElement) => {
-    if (lockRef.current) return;
-    lockRef.current = true;
-    setElement((prev) => !prev);
-
-    setTimeout(() => {
-      lockRef.current = false;
-    }, 300);
-  };
-
-  /*-----------------------------------------------------------*/
-  /* INITIALIZE FORM DATA */
-  /*-----------------------------------------------------------*/
-  useEffect(() => {
-    if (!SheetNameSelected || !gridFileID) return;
-
-    const loadInitialData = async () => {
-      try {
-        const result = await window.DataDashBoard_API.fetchFormData({
-          fileID: gridFileID,
-          sheetName: SheetNameSelected,
-        });
-        if (result?.status) {
-          setFormDataCache(result?.response);
-        } else {
-          setFormDataCache(null);
-          console.warn("[DataEditor:loadInitialData] : ", result?.error);
-          ToastMessage(result?.error, ToastMessageType.error);
-        }
-      } catch (error) {
-        console.error("[DataEditor:loadInitialData]", error);
-      }
+    const isEditorEnabled = editorEnabledBySheet[SheetNameSelected] || true; // [Debug] False
+    const isPanelEditorEnabled =
+      panelEnabledBySheet[SheetNameSelected] || false;
+    const formData = formDataBySheet[SheetNameSelected] || {
+      headerRow: { value: "" },
+      column: { from: "", to: "" },
+      dataRow: { from: "", to: "" },
     };
 
-    loadInitialData();
-  }, [SheetNameSelected, gridFileID]);
+    const setIsEditorEnabled = useCallback(
+      (val) => {
+        setEditorEnabledBySheet((prev) => ({
+          ...prev,
+          [SheetNameSelected]: val,
+        }));
+      },
+      [SheetNameSelected],
+    );
 
-  return (
-    <div className="flex flex-col w-full h-full">
-      {/*-----------------------------------------------------------*/
-      /* EXCEL DATA SECTION */
-      /*-----------------------------------------------------------*/}
-      <div className="relative flex w-full min-h-full overflow-hidden">
+    const setIsPanelEditorEnabled = useCallback(
+      (val) => {
+        setPanelEnabledBySheet((prev) => ({
+          ...prev,
+          [SheetNameSelected]: val,
+        }));
+      },
+      [SheetNameSelected],
+    );
+
+    const setFormData = useCallback(
+      (updater) => {
+        setFormDataBySheet((prev) => {
+          const current = prev[SheetNameSelected] || {
+            headerRow: { value: "" },
+            column: { from: "", to: "" },
+            dataRow: { from: "", to: "" },
+          };
+          const next =
+            typeof updater === "function" ? updater(current) : updater;
+          return { ...prev, [SheetNameSelected]: next };
+        });
+      },
+      [SheetNameSelected],
+    );
+
+    const [formDataCacheBySheet, setFormDataCacheBySheet] = useState({});
+    const formDataCache = formDataCacheBySheet[SheetNameSelected] || null;
+    const [selectedCell, setSelectedCell] = useState(null);
+    const [editedCellsBySheet, setEditedCellsBySheet] = useState({});
+    const [editorInputValue, setEditorInputValue] = useState("");
+
+    useImperativeHandle(ref, () => ({
+      getSheetsWithEdits: () => {
+        return Object.entries(editedCellsBySheet)
+          .filter(([_, edits]) => Object.keys(edits).length > 0)
+          .map(([name, edits]) => ({ name, count: Object.keys(edits).length }));
+      },
+      discardAll: () => {
+        setEditedCellsBySheet({});
+        if (tableRef.current) {
+          tableRef.current.applyEdits({});
+        }
+      },
+      saveAll: async () => {
+        const sheetsWithEdits = Object.entries(editedCellsBySheet).filter(
+          ([_, edits]) => Object.keys(edits).length > 0,
+        );
+
+        let successCount = 0;
+        for (const [sheetName, edits] of sheetsWithEdits) {
+          try {
+            const result = await window.DataDashBoard_API.updateEditedData({
+              fileID: gridFileID,
+              sheetName,
+              editedData: Object.entries(edits).map(([key, value]) => {
+                const [rowIndex, colIndex] = key.split(":").map(Number);
+                return { rowIndex, colIndex, value };
+              }),
+            });
+            if (result?.status) successCount++;
+          } catch (err) {
+            console.error(`Error saving sheet ${sheetName}:`, err);
+          }
+        }
+
+        setEditedCellsBySheet({});
+        return successCount === sheetsWithEdits.length;
+      },
+    }));
+
+    useEffect(() => {
+      const total = Object.values(editedCellsBySheet).reduce(
+        (acc, sheet) => acc + Object.keys(sheet).length,
+        0,
+      );
+      onEditsChange?.(total > 0);
+      const editsInfo = Object.entries(editedCellsBySheet)
+        .filter(([_, edits]) => Object.keys(edits).length > 0)
+        .map(([name]) => name);
+      onSheetsWithEditsChange?.(editsInfo);
+    }, [editedCellsBySheet, onEditsChange, onSheetsWithEditsChange]);
+    const [headerColTrigger, setHeaderColTrigger] = useState(0);
+
+    const tableRef = useRef(null);
+
+    /*-----------------------------------------------------------*/
+    /* MANAGE GRID DATA */
+    /*-----------------------------------------------------------*/
+    if (!grid) {
+      return (
+        <div className="text-sm text-gray-500">No sheet data available</div>
+      );
+    }
+
+    /*-----------------------------------------------------------*/
+    /* MANAGE GRID DATA COUNT */
+    /*-----------------------------------------------------------*/
+    const gridDataCount = useMemo(
+      () => ({
+        gridRowData: { minCount: 1, maxCount: grid.rowCount },
+        gridColData: {
+          minCount: "A",
+          maxCount: getExcelColumnName(grid.colCount - 1),
+        },
+      }),
+      [grid],
+    );
+
+    /*-----------------------------------------------------------*/
+    /* FORCE REFRESH EFFECT GENERATION */
+    /*-----------------------------------------------------------*/
+    const refreshHeaderColumns = useCallback(() => {
+      setHeaderColTrigger((t) => t + 1);
+      setFormDataCacheBySheet((prev) => {
+        const next = { ...prev };
+        delete next[SheetNameSelected];
+        return next;
+      });
+    }, [SheetNameSelected]);
+
+    /*-----------------------------------------------------------*/
+    /* CONVERT COLUMN HEADER TO INDEX */
+    /*-----------------------------------------------------------*/
+    const columnToIndex = (value) =>
+      value
+        .toUpperCase()
+        .split("")
+        .reduce((acc, char) => acc * 26 + (char.charCodeAt(0) - 64), 0);
+
+    /*-----------------------------------------------------------*/
+    /* RESET DATA ON SHEET CHANGES */
+    /*-----------------------------------------------------------*/
+    useEffect(() => {
+      setSelectedCell(null);
+      setEditorInputValue("");
+    }, [SheetNameSelected]);
+
+    /*-----------------------------------------------------------*/
+    /* RESET ON EDITOR MODE EXIT */
+    /*-----------------------------------------------------------*/
+    useEffect(() => {
+      if (!isEditorEnabled) {
+        setSelectedCell(null);
+        setEditorInputValue("");
+      }
+    }, [isEditorEnabled]);
+
+    /*-----------------------------------------------------------*/
+    /* HANDLE CELL SELECT */
+    /*-----------------------------------------------------------*/
+    const handleCellSelect = useCallback(
+      (rowIndex, colIndex, rawValue) => {
+        setSelectedCell({ rowIndex, colIndex, rawValue });
+        setEditorInputValue(rawValue ?? "");
+      },
+      [editedCellsBySheet, SheetNameSelected],
+    );
+
+    /*-----------------------------------------------------------*/
+    /* HANDLE HEADER COLUMN */
+    /*-----------------------------------------------------------*/
+    const handleHeaderColumns = useMemo(() => {
+      if (!formDataCache) return [];
+      const rowCache = formDataCache?.headerData || [];
+      if (!rowCache) return [];
+      const colFrom = columnToIndex(formDataCache.columnheader?.from) - 1;
+      const colTo = columnToIndex(formDataCache.columnheader?.to) - 1;
+      return buildHeaderColumns(rowCache, colFrom, colTo);
+    }, [formDataCache, headerColTrigger]);
+
+    /*-----------------------------------------------------------*/
+    /* HANDLE DATA EDITED */
+    /*-----------------------------------------------------------*/
+    const handleEditorInputChange = useCallback(
+      (e) => {
+        const value = e.target.value;
+        setEditorInputValue(value);
+
+        if (!selectedCell) return;
+        const key = `${selectedCell.rowIndex}:${selectedCell.colIndex}`;
+        setEditedCellsBySheet((prev) => ({
+          ...prev,
+          [SheetNameSelected]: {
+            ...(prev[SheetNameSelected] ?? {}),
+            [key]: value,
+          },
+        }));
+      },
+      [selectedCell],
+    );
+
+    /*-----------------------------------------------------------*/
+    /* REVERT UPDATED CELL */
+    /*-----------------------------------------------------------*/
+    const handleRevertCell = useCallback(() => {
+      if (!selectedCell) return;
+      const key = `${selectedCell.rowIndex}:${selectedCell.colIndex}`;
+      setEditorInputValue(selectedCell?.rawValue ?? "");
+      setEditedCellsBySheet((prev) => {
+        const sheetEdits = { ...(prev[SheetNameSelected] ?? {}) };
+        delete sheetEdits[key];
+        return { ...prev, [SheetNameSelected]: sheetEdits };
+      });
+    }, [selectedCell, SheetNameSelected]);
+
+    /*-----------------------------------------------------------*/
+    /* REVERT SPECIFIC CELL */
+    /*-----------------------------------------------------------*/
+    const handleRevertSpecificCell = useCallback(
+      (row, col) => {
+        const key = `${row}:${col}`;
+        if (selectedCell?.rowIndex === row && selectedCell?.colIndex === col) {
+          setEditorInputValue(selectedCell?.rawValue ?? "");
+        }
+        setEditedCellsBySheet((prev) => {
+          const sheetEdits = { ...(prev[SheetNameSelected] ?? {}) };
+          delete sheetEdits[key];
+          return { ...prev, [SheetNameSelected]: sheetEdits };
+        });
+      },
+      [selectedCell, SheetNameSelected],
+    );
+
+    /*-----------------------------------------------------------*/
+    /* DISCARD ALL EDITS */
+    /*-----------------------------------------------------------*/
+    const handleDiscardAll = useCallback(() => {
+      setEditorInputValue(selectedCell?.rawValue ?? "");
+      /* also revert the cache */
+      tableRef.current?.applyEdits({});
+
+      setEditedCellsBySheet((prev) => ({
+        ...prev,
+        [SheetNameSelected]: {},
+      }));
+    }, [selectedCell, SheetNameSelected]);
+
+    /*-----------------------------------------------------------*/
+    /* HANDEL SAVE BUTTON CLICK */
+    /*-----------------------------------------------------------*/
+    const handleSaveEdits = useCallback(async () => {
+      if (!Object.keys(editedCellsBySheet[SheetNameSelected]).length) return;
+
+      tableRef.current?.applyEdits(editedCellsBySheet[SheetNameSelected]);
+
+      try {
+        const result = await window.DataDashBoard_API.updateEditedData({
+          fileID: gridFileID,
+          sheetName: SheetNameSelected,
+          editedData: Object.entries(editedCellsBySheet[SheetNameSelected]).map(
+            ([key, value]) => {
+              const [rowIndex, colIndex] = key.split(":").map(Number);
+              return { rowIndex, colIndex, value };
+            },
+          ),
+        });
+
+        console.log("[DataEdited:handleSaveEdits] : ", result);
+        if (result?.status) {
+          ToastMessage(
+            DataEditor_message.changes_save_message.message,
+            ToastMessageType.success,
+          );
+          setEditedCellsBySheet((prev) => ({
+            ...prev,
+            [SheetNameSelected]: {},
+          }));
+        } else {
+          ToastMessage(
+            DataEditor_message.failed_changes_save_meaage.message,
+            ToastMessageType.error,
+          );
+        }
+      } catch (err) {
+        console.error("[saveEditedCells]", err);
+        ToastMessage("Save failed.", "error");
+      }
+    }, [editedCellsBySheet, gridFileID, SheetNameSelected, ToastMessage]);
+
+    /*-----------------------------------------------------------*/
+    /* EDITED CELL COUNT */
+    /*-----------------------------------------------------------*/
+    const editedCells = editedCellsBySheet[SheetNameSelected] ?? {};
+    const editCount = Object.keys(editedCells).length;
+    const getOriginalValue = useCallback((row, col) => {
+      const cache = tableRef.current?.getRowCache();
+      return cache?.[row]?.[col] ?? "";
+    }, []);
+
+    /*-----------------------------------------------------------*/
+    /* HANDEL BUTTON CLICK */
+    /*-----------------------------------------------------------*/
+    const lockRef = useRef(false);
+
+    const handleClick = (setElement) => {
+      if (lockRef.current) return;
+      lockRef.current = true;
+      setElement((prev) => !prev);
+
+      setTimeout(() => {
+        lockRef.current = false;
+      }, 300);
+    };
+
+    /*-----------------------------------------------------------*/
+    /* INITIALIZE FORM DATA */
+    /*-----------------------------------------------------------*/
+    useEffect(() => {
+      if (!SheetNameSelected || !gridFileID) return;
+
+      if (formDataCacheBySheet[SheetNameSelected] !== undefined) return;
+
+      const fetchCache = async () => {
+        try {
+          const result = await window.DataDashBoard_API.fetchFormData({
+            fileID: gridFileID,
+            sheetName: SheetNameSelected,
+          });
+
+          if (result?.status) {
+            setFormDataCacheBySheet((prev) => ({
+              ...prev,
+              [SheetNameSelected]: result?.response,
+            }));
+          } else {
+            setFormDataCacheBySheet((prev) => ({
+              ...prev,
+              [SheetNameSelected]: null,
+            }));
+          }
+        } catch (err) {
+          console.error("Error fetching form data cache:", err);
+          setFormDataCacheBySheet((prev) => ({
+            ...prev,
+            [SheetNameSelected]: null,
+          }));
+        }
+      };
+
+      fetchCache();
+    }, [SheetNameSelected, gridFileID, formDataCacheBySheet]);
+
+    return (
+      <div className="flex flex-col w-full h-full">
         {/*-----------------------------------------------------------*/
-        /* EXCEL TABEL SECTION */
+        /* EXCEL DATA SECTION */
         /*-----------------------------------------------------------*/}
-        <div
-          className={`
+        <div className="relative flex w-full min-h-full overflow-hidden">
+          {/*-----------------------------------------------------------*/
+          /* EXCEL TABEL SECTION */
+          /*-----------------------------------------------------------*/}
+          <div
+            className={`
             border border-light-border dark:border-dark-border
             h-full
             transition-all duration-300
-            ${showPanel ? "w-[calc(100%-360px)]  rounded-tl-none rounded-tr-none rounded-br-none rounded-lg" : "w-full rounded-tl-none rounded-lg"}
+            flex-1 min-w-0 rounded-lg
+            ${showPanel ? "rounded-tr-none rounded-br-none" : ""}
           `}
-        >
-          <ExcelTableView
-            ref={tableRef}
-            gridTableData={grid}
-            gridFileID={gridFileID}
-            ToastMessage={ToastMessage}
-            isEditorEnabled={isEditorEnabled}
-            selectedCell={selectedCell}
-            handleCellSelect={handleCellSelect}
-            editedCells={editedCells}
-          />
-        </div>
+          >
+            <ExcelTableView
+              ref={tableRef}
+              gridTableData={grid}
+              gridFileID={gridFileID}
+              ToastMessage={ToastMessage}
+              isEditorEnabled={isEditorEnabled}
+              selectedCell={selectedCell}
+              handleCellSelect={handleCellSelect}
+              editedCells={editedCells}
+            />
+          </div>
 
-        {/*-----------------------------------------------------------*/
-        /* SIDEBAR PANEL SECTION */
-        /*-----------------------------------------------------------*/}
-        <div
-          className={`
-            absolute top-0 right-0 h-full w-[360px] z-50
+          {/*-----------------------------------------------------------*/
+          /* SIDEBAR PANEL SECTION */
+          /*-----------------------------------------------------------*/}
+          <div
+            className={`
+            relative
+            ${showPanel ? "shrink-0" : "w-0 border-0"}
+            h-full w-[420px] z-50
             bg-light-card dark:bg-dark-card
             border border-light-border dark:border-dark-border
             transform transition-transform duration-500 ease-in-out
-            ${showPanel ? " translate-x-0 opacity-100 rounded-tl-none rounded-bl-none rounded-lg" : "translate-x-full"} }
+            ${showPanel ? " translate-x-0 opacity-100 rounded-tl-none rounded-bl-none rounded-lg" : "translate-x-full"}
           `}
-        >
-          {/*-----------------------------------------------------------*/
-          /* SIDEBAR TOGGLE BUTTON */
-          /*-----------------------------------------------------------*/}
-          <div
-            title={
-              showPanel
-                ? DataEditor_Label.title_close_sidepanel.title
-                : DataEditor_Label.title_open_sidepanel.title
-            }
-            className="
+          >
+            {/*-----------------------------------------------------------*/
+            /* SIDEBAR TOGGLE BUTTON */
+            /*-----------------------------------------------------------*/}
+            <div
+              title={
+                showPanel
+                  ? DataEditor_Label.title_close_sidepanel.title
+                  : DataEditor_Label.title_open_sidepanel.title
+              }
+              className="
               absolute top-1/2 -left-6 -translate-y-1/2
               w-6 h-16
               flex items-center justify-center
@@ -1274,160 +1554,153 @@ const ExcelGridContainer = memo(function ExcelGridContainer({
               cursor-pointer
               hover:bg-light-hover dark:hover:bg-dark-hover
             "
-            onClick={() => {
-              if (!isPinned) {
-                handleClick(setIsOpen);
-              } else {
-                ToastMessage(
-                  DataEditor_message.sidebar_pinned_message.message,
-                  DataEditor_message.sidebar_pinned_message.message_type,
-                );
-              }
-            }}
-          >
-            <CustomButton
-              btn_bg_color="w-6 h-16 text-icon-bg dark:text-icon_dark-bg flex items-center justify-center"
-              iconSize="w-6 h-6"
-              icon_animation="hover:scale-125"
-              iconSrc={
-                showPanel
-                  ? data_control_icon.sm_right_arrow_head.icon
-                  : data_control_icon.sm_left_arrow_head.icon
-              }
-            />
-          </div>
-
-          {/*-----------------------------------------------------------*/
-          /* SIDEBAR DATA SECTION */
-          /*-----------------------------------------------------------*/}
-          <div className="px-2 py-2 w-full h-full flex flex-col ">
-            {/*-----------------------------------------------------------*/
-            /* SIDEBAR HEADER SECTION */
-            /*-----------------------------------------------------------*/}
-            <div className="flex flex-row gap-4 items-center justify-center ">
-              {/*-----------------------------------------------------------*/
-              /* SIDEBAR BACK BUTTON */
-              /*-----------------------------------------------------------*/}
-              {isEditorEnabled ? (
-                <ArrowLeftCircle
-                  className="w-9 h-8 p-[4px] rounded-md bg-light-card1 dark:bg-dark-card 
-                  hover:bg-light-hover/10  hover:dark:bg-dark-hover 
-                  shadow-[0_2px_6px_rgba(200,200,200,0.5)]
-                  dark:shadow-[0_2px_6px_rgba(0,0,0,0.5)]
-                  text-icon-bg cursor-pointer"
-                  onClick={() => {
-                    setIsEditorEnabled(false);
-                  }}
-                />
-              ) : null}
-
-              {/*-----------------------------------------------------------*/
-              /* SIDEBAR DATA HEADER CONTENT */
-              /*-----------------------------------------------------------*/}
-              <div className="w-full  flex items-center justify-between gap-2  ">
-                {/*-----------------------------------------------------------*/
-                /* SIDEBAR SHEET NAME */
-                /*-----------------------------------------------------------*/}
-                <div
-                  className="
-                    flex items-center justify-center
-                    max-w-[240px]
-                    h-[32px]
-                    px-[4px]
-                    bg-card dark:bg-dark-card
-                    shadow-[0_2px_6px_rgba(200,200,200,0.5)]
-                    dark:shadow-[0_2px_6px_rgba(0,0,0,0.5)]
-                    border border-icon-bg
-                    rounded-[4px]
-                    overflow-hidden
-                    
-                  "
-                >
-                  <CustomLabel
-                    title={SheetNameSelected}
-                    label_text={SheetNameSelected}
-                    label_style="
-                      text-sm font-semibold tracking-wide
-                      text-light-text dark:text-dark-text
-                      whitespace-nowrap overflow-hidden text-ellipsis block
-                    "
-                  />
-                </div>
-
-                {/*-----------------------------------------------------------*/
-                /* SIDEBAR PIN BUTTON */
-                /*-----------------------------------------------------------*/}
-                {isPinned ? (
-                  <PinOff
-                    className={`w-8 h-8 p-[8px]
-                    ${
-                      isPinned
-                        ? "bg-icon-bg dark:bg-icon_dark-bg hover:bg-icon-400  text-dark-text1"
-                        : "bg-light-card1 dark:bg-dark-card hover:bg-card-hover hover:dark:bg-dark-hover text-light-text2 dark:text-dark-text2"
-                    } 
-                    rounded-lg
-                    shadow-[0_2px_6px_rgba(200,200,200,0.5)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.5)]`}
-                    onClick={() => handleClick(setIsPinned)}
-                  />
-                ) : (
-                  <PinIcon
-                    className={`w-8 h-8 p-[8px]
-                    ${
-                      isPinned
-                        ? "bg-icon-bg dark:bg-icon_dark-bg hover:bg-icon-400  text-dark-text1"
-                        : "bg-light-card1 dark:bg-dark-card1 hover:bg-card-hover hover:dark:bg-dark-hover text-light-text2 dark:text-dark-text2"
-                    } 
-                    rounded-lg
-                    shadow-[0_2px_6px_rgba(200,200,200,0.5)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.5)]`}
-                    onClick={() => handleClick(setIsPinned)}
-                  />
-                )}
-              </div>
+              onClick={() => {
+                if (!isPinned) {
+                  handleClick(setIsOpen);
+                } else {
+                  ToastMessage(
+                    DataEditor_message.sidebar_pinned_message.message,
+                    ToastMessageType.warning,
+                  );
+                }
+              }}
+            >
+              <CustomButton
+                btn_bg_color="w-6 h-16 text-icon-bg dark:text-icon_dark-bg flex items-center justify-center"
+                iconSize="w-6 h-6"
+                icon_animation="hover:scale-125"
+                iconSrc={
+                  showPanel
+                    ? data_control_icon.sm_right_arrow_head.icon
+                    : data_control_icon.sm_left_arrow_head.icon
+                }
+              />
             </div>
 
             {/*-----------------------------------------------------------*/
-            /* SIDEBAR DATA CONTENT */
+            /* SIDEBAR DATA SECTION */
             /*-----------------------------------------------------------*/}
-            {isEditorEnabled ? (
-              <EditorPanel
-                selectedCell={selectedCell}
-                editorInputValue={editorInputValue}
-                onInputChange={handleEditorInputChange}
-                onRevertCell={handleRevertCell}
-                onDiscardAll={handleDiscardAll}
-                onSave={handleSaveEdits}
-                editCount={editCount}
-                editedCells={editedCells}
-                headerColumns={handleHeaderColumns}
-              />
-            ) : (
-              <ExcelSidePanel
-                gridFileID={gridFileID}
-                sheetName={SheetNameSelected}
-                gridDataCount={gridDataCount}
-                isEditorEnabledPanel={setIsEditorEnabled}
-                formDataCache={formDataCache}
-                onFormSaved={refreshHeaderColumns}
-              />
-            )}
+            <div
+              className={`px-2 py-2 w-full h-full flex flex-col ${showPanel ? "" : "hidden"}`}
+            >
+              {/*-----------------------------------------------------------*/
+              /* SIDEBAR HEADER SECTION */
+              /*-----------------------------------------------------------*/}
+              <div className="flex items-center justify-between gap-3 pt-0 pb-2 pl-2 pr-2 mb-2 border-b border-light-border dark:border-dark-border bg-light-card dark:bg-dark-card rounded-t-xl">
+                <div className="flex items-center gap-2">
+                  {/* BACK BUTTON */}
+                  {isEditorEnabled && (
+                    <button
+                      onClick={() => setIsEditorEnabled(false)}
+                      className="
+                    group
+                    inline-flex items-center justify-center
+                    p-1.5
+                    rounded-lg
+                    transition-all duration-300 ease-in-out
+                    bg-light-card1 dark:bg-dark-card1
+                    hover:bg-icon-bg dark:hover:bg-icon_dark-bg
+                    text-icon-bg dark:text-icon_dark-bg hover:text-white dark:hover:text-white
+                    border border-light-border dark:border-dark-border
+                    active:scale-90
+                    shadow-sm hover:shadow-md"
+                      title="Back"
+                    >
+                      <ChevronLeft
+                        size={16}
+                        strokeWidth={3}
+                        className="transition-transform duration-300 group-hover:-translate-x-1"
+                      />
+                    </button>
+                  )}
+
+                  {/* SHEET NAME BADGE */}
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-light-card1 dark:bg-dark-card1 border border-light-border dark:border-dark-border rounded-lg shadow-sm max-w-[180px]">
+                    <TableIcon
+                      size={14}
+                      className="text-icon-bg dark:text-icon_dark-bg shrink-0"
+                    />
+                    <span
+                      title={SheetNameSelected}
+                      className="text-xs font-bold text-light-text dark:text-dark-text truncate tracking-tight"
+                    >
+                      {SheetNameSelected}
+                    </span>
+                  </div>
+                </div>
+
+                {/* PIN BUTTON */}
+                <button
+                  onClick={() => handleClick(setIsPinned)}
+                  className={`
+                  p-2 rounded-lg transition-all duration-200
+                  ${
+                    isPinned
+                      ? "bg-icon-bg dark:bg-icon_dark-bg text-white"
+                      : "bg-light-card1 dark:bg-dark-card1 border border-light-border dark:border-dark-border text-light-text2 dark:text-dark-text2 hover:bg-light-card2 dark:hover:bg-dark-card2"
+                  }
+                `}
+                  title={isPinned ? "Unpin Panel" : "Pin Panel"}
+                >
+                  {isPinned ? <PinOff size={16} /> : <PinIcon size={16} />}
+                </button>
+              </div>
+
+              {/*-----------------------------------------------------------*/
+              /* SIDEBAR DATA CONTENT */
+              /*-----------------------------------------------------------*/}
+              {isEditorEnabled ? (
+                <ExcelEditorPanel
+                  selectedCell={selectedCell}
+                  editorInputValue={editorInputValue}
+                  onInputChange={handleEditorInputChange}
+                  onRevertCell={handleRevertCell}
+                  onRevertSpecificCell={handleRevertSpecificCell}
+                  getOriginalValue={getOriginalValue}
+                  onDiscardAll={handleDiscardAll}
+                  onSave={handleSaveEdits}
+                  onCellSelect={handleCellSelect}
+                  editCount={editCount}
+                  editedCells={editedCells}
+                  headerColumns={handleHeaderColumns}
+                />
+              ) : (
+                <ExcelSidePanel
+                  key={SheetNameSelected}
+                  gridFileID={gridFileID}
+                  sheetName={SheetNameSelected}
+                  gridDataCount={gridDataCount}
+                  isEditorEnabledPanel={setIsEditorEnabled}
+                  formDataCache={formDataCacheBySheet[SheetNameSelected]}
+                  onFormSaved={refreshHeaderColumns}
+                  formData={formData}
+                  setFormData={setFormData}
+                  isPanelEditorEnabled={isPanelEditorEnabled}
+                  setIsPanelEditorEnabled={setIsPanelEditorEnabled}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  }),
+);
 /*--------------------------------------------------------------- */
 
 /*--------------------------------------------------------------- */
 /**
- * @function  EditorPanel => memo
+ * @function  ExcelEditorPanel => memo
  * @purpose   To add the editing feature on the Excel Grid Container
  */
-const EditorPanel = memo(function EditorPanel({
+const ExcelEditorPanel = memo(function ExcelEditorPanel({
   selectedCell,
   editorInputValue,
   onInputChange,
   onRevertCell,
+  onRevertSpecificCell,
+  onCellSelect,
+  getOriginalValue,
   onDiscardAll,
   onSave,
   editCount,
@@ -1435,334 +1708,649 @@ const EditorPanel = memo(function EditorPanel({
   headerColumns = [],
 }) {
   const [activeTab, setActiveTab] = useState("cell");
+  const [detailedRow, setDetailedRow] = useState(null);
+  const [expandedCells, setExpandedCells] = useState({});
 
+  /*-------------------------------------------------------------------*
+   *  CELL LABEL
+   *-------------------------------------------------------------------*/
   const cellLabel = selectedCell
     ? `${getExcelColumnName(selectedCell.colIndex)}${selectedCell.rowIndex + 1}`
     : "—";
 
-  /* ── group pending edits by row for summary ── */
-  const editsByRow = useMemo(() => {
+  /*-------------------------------------------------------------------*
+   *  GROUP EDITED DATA BY ROW FOR SUMMARY
+   *-------------------------------------------------------------------*/
+  const EditedDatas = useMemo(() => {
     return Object.keys(editedCells ?? {}).reduce((acc, key) => {
-      const [r, c] = key.split(":");
-      if (!acc[r]) acc[r] = [];
-      acc[r].push(Number(c));
+      const [rowKey, colKey] = key.split(":");
+      if (!acc[rowKey]) acc[rowKey] = [];
+      acc[rowKey].push(Number(colKey));
       return acc;
     }, {});
   }, [editedCells]);
 
-  /* ─────────────────────────────────────────────── */
-  const tabClass = (tab) =>
-    `flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+  /*-------------------------------------------------------------------*
+   *  CELL EDIT TAB BUTTON CLASS
+   *-------------------------------------------------------------------*/
+  const CellTabClass = (tab) =>
+    `flex-1 px-2 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-200 whitespace-nowrap ${
       activeTab === tab
-        ? "bg-icon-bg dark:bg-icon_dark-bg text-white"
-        : "text-light-text_muted dark:text-dark-text_muted hover:bg-light-hover dark:hover:bg-dark-hover"
+        ? "bg-light-card3 dark:bg-dark-card3 shadow-sm text-icon-bg dark:text-icon_dark-bg"
+        : "text-light-text2 dark:text-dark-text2 hover:bg-light-hover dark:hover:bg-dark-hover"
     }`;
 
+  /*-------------------------------------------------------------------*
+   *  CELL EDIT ACTION BUTTONS
+   *-------------------------------------------------------------------*/
+  const CellActionButtons = (
+    <div className="flex flex-col gap-3 mt-auto pt-4 border-t border-light-border dark:border-dark-border">
+      {/*-----------------------------------------------------------*/
+      /* SAVE (COMMIT) DATA BUTTON /*
+        /*-----------------------------------------------------------*/}
+      <CustomButton
+        label={
+          <div className="flex items-center justify-center gap-2 w-full">
+            <CheckCircle2 size={18} />
+            <span>
+              {editCount > 0
+                ? `Save ${editCount} Change${editCount > 1 ? "s" : ""}`
+                : DataEditor_Cell_Editor_Label.already_saved_label.label}
+            </span>
+          </div>
+        }
+        disabled={editCount === 0}
+        onClick={onSave}
+        btn_bg_color="w-full h-[44px] rounded-xl text-sm font-bold bg-button-primary hover:bg-button-primary-hover text-white shadow-lg shadow-button-primary/20 transition-all duration-200 active:scale-[0.98] disabled:opacity-30"
+      />
+      {/*-----------------------------------------------------------*/
+      /* DISCARD ALL DATA BUTTON /*
+        /*-----------------------------------------------------------*/}
+      <CustomButton
+        label={
+          <div className="flex items-center justify-center gap-2 w-full ">
+            <Trash2 size={16} />
+            <span>{DataEditor_Cell_Editor_Label.discard_label.label}</span>
+          </div>
+        }
+        disabled={editCount === 0}
+        onClick={onDiscardAll}
+        btn_bg_color="w-full h-[44px] rounded-xl border border-red-500 bg-red-50 dark:bg-red-700 text-red-600 dark:text-white text-[10px] font-bold uppercase hover:bg-red-100 dark:hover:bg-red-900/20 transition-all duration-200 disabled:opacity-30"
+      />
+    </div>
+  );
+
   return (
-    <div className="w-full h-full flex flex-col gap-3 mt-3 px-1">
-      {/* ── Tab Switch ─────────────────────────────── */}
-      <div className="flex gap-1 p-1 rounded-lg bg-light-card1 dark:bg-dark-card2 border border-light-border dark:border-dark-border">
+    <div className="w-full h-full overflow-y-auto custom-scroll flex flex-col gap-4 mt-2 px-1">
+      {/*-----------------------------------------------------------*/
+       /* EDITOR TAB SECTION */
+       /*-----------------------------------------------------------*/}
+      <div className="flex gap-1 p-1 rounded-xl bg-light-card1 dark:bg-dark-card1 border border-light-border dark:border-dark-border">
+        {/*-----------------------------------------------------------*/
+        /* CELL EDITOR TAB */
+        /*-----------------------------------------------------------*/}
         <button
-          className={tabClass("cell")}
+          className={CellTabClass("cell")}
           onClick={() => setActiveTab("cell")}
         >
+          <MousePointer2 size={14} />
           {DataEditor_Label.cell_editor_label.label}
         </button>
+        {/*-----------------------------------------------------------*/
+        /* CHANGES TAB */
+        /*-----------------------------------------------------------*/}
         <button
-          className={tabClass("fields")}
+          className={CellTabClass("changes")}
+          onClick={() => setActiveTab("changes")}
+        >
+          <LayoutList size={14} />
+          {DataEditor_Label.changes_label.label}
+          {editCount > 0 && (
+            <span className="ml-1 min-w-[18px] h-[18px] inline-flex items-center justify-center px-1.5 rounded-full bg-orange-500 text-white text-[9px] font-black shadow-sm shadow-orange-500/30">
+              {editCount}
+            </span>
+          )}
+        </button>
+        {/*-----------------------------------------------------------*/
+        /* FIELDS TAB */
+        /*-----------------------------------------------------------*/}
+        <button
+          className={CellTabClass("fields")}
           onClick={() => setActiveTab("fields")}
         >
+          <Hash size={14} />
           {DataEditor_Label.header_field_label.label}
           {headerColumns.length > 0 && (
-            <span
-              className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${activeTab ? "bg-light-card text-icon-500" : "bg-icon-500/20 text-icon-500"}`}
-            >
+            <span className="ml-1 min-w-[18px] h-[18px] inline-flex items-center justify-center px-1.5 rounded-full bg-icon-500 text-white text-[9px] font-black shadow-sm shadow-icon-500/30">
               {headerColumns.length}
             </span>
           )}
         </button>
       </div>
 
-      {/* ══════════════════════════════════════════════
-        TAB 1 — CELL EDITOR
-      ══════════════════════════════════════════════ */}
+      {/*-----------------------------------------------------------*/
+       /* CELL TAB SECTION */
+       /*-----------------------------------------------------------*/}
       {activeTab === "cell" && (
-        <div className="flex flex-col gap-3 flex-1 min-h-0">
-          {/* ── Top Bar: cell address + status ── */}
-          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-light-card1 dark:bg-dark-card2 border border-light-border dark:border-dark-border">
-            {/* Cell address chip */}
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-icon-500 dark:bg-icon_dark-500 animate-pulse" />
-              <span className="text-[11px] font-mono font-semibold text-icon-500 dark:text-icon_dark-500 tracking-wider">
-                {cellLabel}
-              </span>
-            </div>
-
-            {/* Row indicator */}
-            {selectedCell && (
-              <>
-                <span className="text-light-border dark:text-dark-border">
-                  |
+        <div className="flex flex-col gap-4 flex-1 min-h-0">
+          {/*-----------------------------------------------------------*/
+          /* CELL STATUS SECTION */
+          /*-----------------------------------------------------------*/}
+          <div className="grid grid-cols-2 gap-2">
+            {/*-----------------------------------------------------------*/
+            /* SELECTED CELL STATUS */
+            /*-----------------------------------------------------------*/}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-light-card1 dark:bg-dark-card1 border border-light-border dark:border-dark-border shadow-sm">
+              <div className="p-1 rounded-md bg-icon-50 dark:bg-icon_dark-700 text-icon-bg dark:text-icon_dark-bg">
+                <MousePointer2 size={12} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-light-text2 dark:text-dark-text2">
+                  {DataEditor_Cell_Editor_Label.selected_cell_label.label}
                 </span>
-                <span className="text-[10px] font-mono text-light-text_muted dark:text-dark-text_muted">
-                  ROW{" "}
-                  <span className="text-light-text2 dark:text-dark-text2">
-                    {selectedCell.rowIndex + 1}
-                  </span>
-                </span>
-              </>
-            )}
-
-            {/* Unsaved badge */}
-            {editCount > 0 && (
-              <div className="ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-yellow-400/10 border border-yellow-400/30">
-                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                <span className="text-[10px] font-mono font-semibold text-yellow-600 dark:text-yellow-400">
-                  {editCount} UNSAVED
+                <span className="text-xs font-mono font-bold text-light-text dark:text-dark-text">
+                  {cellLabel}
                 </span>
               </div>
-            )}
+            </div>
+            {/*-----------------------------------------------------------*/
+            /* PENDING CHANGES STATUS */
+            /*-----------------------------------------------------------*/}
+            <div className="flex items-center px-3 py-2 rounded-xl bg-light-card1 dark:bg-dark-card1 border border-light-border dark:border-dark-border shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded-md bg-orange-50 dark:bg-orange-700 text-orange-600 dark:text-orange-200">
+                  <AlertCircle size={12} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[9px] uppercase font-bold text-light-text2 dark:text-dark-text2">
+                    {DataEditor_Cell_Editor_Label.pending_changes_label.label}
+                  </span>
+                  <span className="text-xs font-mono font-bold text-light-text dark:text-dark-text">
+                    {editCount}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* ── Cell Value Editor ── */}
-          <div className="flex flex-col flex-1 min-h-0 rounded-md overflow-hidden border border-input-light-border dark:border-input-dark-border focus-within:border-icon-500 dark:focus-within:border-icon_dark-500 transition-colors duration-150">
-            {/* Editor toolbar strip */}
-            <div className="flex items-center justify-between px-3 py-1.5 bg-light-card1 dark:bg-dark-card2 border-b border-input-light-border dark:border-input-dark-border">
-              <span className="text-[9px] uppercase tracking-[0.12em] font-semibold text-light-text_muted dark:text-dark-text_muted">
-                cell value
-              </span>
-              <div className="flex items-center gap-1">
-                <span className="text-[9px] font-semibold text-light-text_muted dark:text-dark-text_muted opacity-90">
-                  {editorInputValue?.length ?? 0} chars
+          {/*-----------------------------------------------------------*/
+          /* EDITOR CONTAINER SECTION */
+          /*-----------------------------------------------------------*/}
+          <div className="flex flex-col flex-1 min-h-0 rounded-2xl overflow-hidden border border-light-border dark:border-dark-border bg-white dark:bg-dark-card focus-within:ring-2 focus-within:ring-icon-500/20 focus-within:border-icon-bg transition-all duration-200 shadow-sm">
+            {/*-----------------------------------------------------------*/
+            /* CELL CONTENT HEADER SECTION */
+            /*-----------------------------------------------------------*/}
+            <div className="flex items-center justify-between px-4 py-2 bg-light-card1 dark:bg-dark-card1 border-b border-light-border dark:border-dark-border">
+              {/*-----------------------------------------------------------*/
+               /* CELL CONTENT HEADER ICON AND TEXT SECTION */
+               /*-----------------------------------------------------------*/}
+              <div className="flex items-center gap-2">
+                <Edit3 size={12} className="text-icon-bg dark:text-icon_dark-bg" />
+                <span className="text-[10px] uppercase font-bold tracking-wider text-light-text1 dark:text-dark-text1">
+                  {DataEditor_Cell_Editor_Label.cell_editor_content_label.label}
                 </span>
               </div>
+              
+              {/*-----------------------------------------------------------*/
+               /* CELL CONTENT REVERT BUTTON SECTION */
+               /*-----------------------------------------------------------*/}
+              <div>
+                <button
+                  disabled={!selectedCell}
+                  onClick={onRevertCell}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-50 text-red-600 dark:text-red-400 text-[10px] font-bold uppercase hover:bg-red-100 dark:hover:bg-red-900/20 transition-all border border-red-100 dark:border-red-900/20 shadow-sm disabled:opacity-30"
+                >
+                  <Undo2 size={12} strokeWidth={2.5} />
+                  {DataEditor_Cell_Editor_Label.revert_label.label}
+                </button>
+              </div>
             </div>
-
-            {/* Textarea */}
+            {/*-----------------------------------------------------------*/
+            /* CELL CONTENT INPUT SECTION */
+            /*-----------------------------------------------------------*/}
             <textarea
-              rows={4}
+              rows={5}
               disabled={!selectedCell}
               value={editorInputValue}
               onChange={onInputChange}
               placeholder={
                 selectedCell
-                  ? "Edit cell value…"
-                  : "Select a cell to begin editing"
+                  ? DataEditor_Cell_Editor_Label.type_something_here_placeholder_label.label
+                  : DataEditor_Cell_Editor_Label.select_cell_to_edit_placeholder_label.label
               }
-              className={`custom-scroll
-                flex-1 w-full px-3 py-2.5 text-sm font-mono resize-none
-                bg-input-light-background dark:bg-input-dark-background
-                text-input-light-text dark:text-input-dark-text
-                placeholder:text-input-light-placeholder dark:placeholder:text-input-dark-placeholder
-                focus:outline-none
-                disabled:opacity-40 disabled:cursor-not-allowed
-                transition-colors leading-relaxed
-              `}
+              className="custom-scroll flex-1 w-full min-h-[120px] px-4 py-3 text-sm font-medium resize-none bg-light-card1 dark:bg-dark-card1 text-light-text dark:text-dark-text placeholder:text-input-light-text_secondary dark:placeholder:text-input-dark-text_secondary focus:outline-none disabled:opacity-30 disabled:text-input-light-text_disabled dark:disabled:text-input-dark-text_disabled leading-relaxed transition-all"
             />
-
-            {/* Bottom action strip */}
-            <div className="flex items-center justify-between px-3 py-1.5 bg-light-card1 dark:bg-dark-card2 border-t border-input-light-border dark:border-input-dark-border">
-              <span className="text-[12px] px-1 rounded-sm bg-light-card2 dark:bg-dark-card2 text-light-text_muted dark:text-dark-text_muted font-mono">
-                {selectedCell ? `${cellLabel}` : "—"}
-              </span>
-              <button
-                disabled={!selectedCell}
-                onClick={onRevertCell}
-                className="
-                  flex items-center gap-1
-                  px-2 py-1
-                  text-[11px] font-medium
-                  bg-red-50 dark:bg-red-900/20
-                  text-red-600 dark:text-red-400
-                  hover:bg-red-200 dark:hover:bg-red-50
-                  rounded-md
-                  transition-all duration-150
-                  disabled:opacity-40
-                  disabled:cursor-not-allowed
-                  disabled:hover:bg-transparent
-                  disabled:hover:text-red-600
-                "
-              >
-                <IterationCw size={14} />
-                {DataEditor_Label.revert_label.label}
-              </button>
+            {/*-----------------------------------------------------------*/
+             /* CELL CONTENT CHARS COUNT SECTION */
+             /*-----------------------------------------------------------*/}
+            <div className="flex items-center justify-end px-3 py-2 bg-light-card1 dark:bg-dark-card1 border-t border-light-border dark:border-dark-border">
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border shadow-sm">
+                <span className="text-[10px] font-mono font-bold text-light-text_muted dark:text-dark-text_muted">
+                  {editorInputValue?.length ?? 0}
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-light-text_muted dark:text-dark-text_muted">
+                  {DataEditor_Cell_Editor_Label.chars_label.label}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* ── Pending Changes ── */}
-          {editCount > 0 && (
-            <div className="flex flex-col gap-1.5 min-h-0">
-              {/* Section header */}
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-px bg-light-border dark:bg-dark-border" />
-                <span className="text-[9px] uppercase tracking-[0.12em] font-semibold text-light-text_muted dark:text-dark-text_muted whitespace-nowrap">
-                  Pending · {editCount}
-                </span>
-                <div className="flex-1 h-px bg-light-border dark:bg-dark-border" />
-              </div>
+          {/*-----------------------------------------------------------*/
+          /* CELL ACTION BUTTONS SECTION */
+          /*-----------------------------------------------------------*/}
+          {CellActionButtons}
+        </div>
+      )}
 
-              {/* Change rows list */}
-              <div className="overflow-y-auto custom-scroll max-h-[90px] space-y-1 pr-0.5">
-                {Object.entries(editsByRow).map(([rowIdx, cols]) => (
-                  <div
-                    key={rowIdx}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200/60 dark:border-yellow-700/30"
-                  >
-                    {/* Row dot */}
-                    <div className="w-1 h-1 rounded-full bg-yellow-400 shrink-0" />
-                    <span className="text-[10px] font-mono text-yellow-700 dark:text-yellow-400 font-semibold">
-                      R{Number(rowIdx) + 1}
+      {/*-----------------------------------------------------------*/
+       /* CHANGES TAB SECTION */
+       /*-----------------------------------------------------------*/}
+      {activeTab === "changes" && (
+        <div className="flex flex-col gap-4 flex-1 min-h-0 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="flex flex-col flex-1 min-h-0 rounded-2xl overflow-hidden border border-light-border dark:border-dark-border bg-white dark:bg-dark-card transition-all duration-200 shadow-sm">
+            {detailedRow === null ? (
+              /*-----------------------------------------------------------*/
+              /* VIEW 1: LIST OF MODIFIED ROWS */
+              /*-----------------------------------------------------------*/
+              <div className="flex flex-col flex-1 min-h-0">
+                {/*-----------------------------------------------------------*/
+                /* MODIFIED ROWS HEADER */
+                /*-----------------------------------------------------------*/}
+                <div className="px-4 py-3 bg-light-card1 dark:bg-dark-card1 border-b border-light-border dark:border-dark-border flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <LayoutList
+                      size={14}
+                      className="text-icon-bg dark:text-icon_dark-bg"
+                    />
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-light-text2 dark:text-dark-text2">
+                      {DataEditor_Modified_Data_Label.modified_data_label.label}
                     </span>
-                    <span className="text-[10px] text-light-text_muted dark:text-dark-text_muted">
-                      {cols.length} edit{cols.length > 1 ? "s" : ""}
-                    </span>
-                    {/* Cell positions */}
-                    <div className="ml-auto flex gap-1">
-                      {cols.slice(0, 4).map((col) => (
-                        <span
-                          key={col}
-                          className="text-[9px] font-mono px-1 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-500"
-                        >
-                          C{col}
-                        </span>
-                      ))}
-                      {cols.length > 4 && (
-                        <span className="text-[9px] text-light-text_muted dark:text-dark-text_muted">
-                          +{cols.length - 4}
-                        </span>
-                      )}
+                  </div>
+                  <span className="px-2 py-0.5 rounded-md bg-icon-bg dark:bg-icon_dark-bg text-light-bg text-[10px] font-bold">
+                    {Object.keys(EditedDatas).length}{" "}
+                    {DataEditor_Modified_Data_Label.record_label.label}
+                  </span>
+                </div>
+                {/*-----------------------------------------------------------*/
+                /* MODIFIED ROWS LISTS */
+                /*-----------------------------------------------------------*/}
+                <div className="flex-1 bg-light-card1 dark:bg-dark-card1 overflow-y-auto custom-scroll p-3 space-y-2.5">
+                  {Object.entries(EditedDatas).length === 0 ? (
+                    /*-----------------------------------------------------------*/
+                    /* DEFAULT MODIFIED DATA CONTAINER */
+                    /*-----------------------------------------------------------*/
+                    <div className="flex flex-col items-center justify-center h-full opacity-70">
+                      <LayoutList
+                        size={40}
+                        className="mb-2 text-light-text_muted dark:text-dark-text_muted"
+                      />
+                      <p className="text-[12px] font-bold text-light-text dark:text-dark-text tracking-widest">
+                        {
+                          DataEditor_Modified_Data_Label
+                            .no_modified_data_message.label
+                        }
+                      </p>
+                    </div>
+                  ) : (
+                    Object.entries(EditedDatas).map(([rowIdx, cols]) => (
+                      /*-----------------------------------------------------------*/
+                      /* MODIFIED DATA ROWS */
+                      /*-----------------------------------------------------------*/
+                      <div
+                        key={rowIdx}
+                        onClick={() => setDetailedRow(rowIdx)}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-light-card1 dark:bg-dark-card1 
+                        border border-light-border dark:border-dark-border group 
+                        hover:border-icon-bg dark:hover:border-icon_dark-bg 
+                        hover:bg-light-card dark:hover:bg-dark-card transition-all cursor-pointer shadow-sm"
+                      >
+                        {/*-----------------------------------------------------------*/
+                        /* MODIFIED DATA ROW INDEX */
+                        /*-----------------------------------------------------------*/}
+                        <div className="w-10 h-10 rounded-xl bg-light-card dark:bg-dark-card flex items-center justify-center text-xs font-bold text-icon-500 shadow-sm border border-light-border dark:border-dark-border group-hover:bg-icon-500 group-hover:text-white transition-all">
+                          R{Number(rowIdx) + 1}
+                        </div>
+                        {/*-----------------------------------------------------------*/
+                        /* MODIFIED DATA ROW INFO */
+                        /*-----------------------------------------------------------*/}
+                        <div className="flex flex-col flex-1">
+                          {/*-----------------------------------------------------------*/
+                          /* MODIFIED COLUMN COUNT */
+                          /*-----------------------------------------------------------*/}
+                          <span className="text-xs font-bold text-light-text dark:text-dark-text">
+                            {cols.length} Column
+                            {cols.length > 1 ? "s" : ""} Modified
+                          </span>
+                          {/*-----------------------------------------------------------*/
+                          /* MODIFIED COLUMN LIST ROWS */
+                          /*-----------------------------------------------------------*/}
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            {/*-----------------------------------------------------------*/
+                            /* MODIFIED COLUMN LIST DATA */
+                            /*-----------------------------------------------------------*/}
+                            {cols.slice(0, 5).map((col) => (
+                              <span
+                                key={col}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const rawValue = getOriginalValue?.(
+                                    Number(rowIdx),
+                                    col,
+                                  );
+                                  onCellSelect?.(Number(rowIdx), col, rawValue);
+                                  setActiveTab("cell");
+                                }}
+                                className="text-[12px] font-mono font-bold px-2 py-0.5 rounded bg-light-card dark:bg-dark-card 
+                                border border-light-border dark:border-dark-border text-light-text1 dark:text-dark-text1 
+                                hover:text-icon-bg dark:hover:text-icon_dark-bg hover:border-icon-bg dark:hover:border-icon_dark-bg 
+                                transition-all"
+                              >
+                                {getExcelColumnName(col)}
+                              </span>
+                            ))}
+                            {/*-----------------------------------------------------------*/
+                            /* MODIFIED COLUMN LIST DATA EXTRA */
+                            /*-----------------------------------------------------------*/}
+                            {cols.length > 5 && (
+                              <span className="text-[12px] font-bold text-icon-bg dark:text-icon_dark-bg bg-icon-50 px-2 py-0.5 rounded">
+                                +{cols.length - 5}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {/*-----------------------------------------------------------*/
+                        /* MODIFIED COLUMN LIST DATA EXTRA */
+                        /*-----------------------------------------------------------*/}
+                        <ChevronRight
+                          size={16}
+                          className="text-light-text dark:text-dark-text opacity-0 group-hover:opacity-100 transition-all"
+                        />
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : (
+              /*-----------------------------------------------------------*/
+              /* VIEW 2: DETAILED CELL EDITS FOR ROW */
+              /*-----------------------------------------------------------*/
+              <div className="flex flex-col flex-1 min-h-0">
+                {/*-----------------------------------------------------------*/
+                /* MODIFIED DATA VIEW 2 HEADER */
+                /*-----------------------------------------------------------*/}
+                <div className="px-4 py-3 bg-light-card1 dark:bg-dark-card1 border-b border-light-border dark:border-dark-border flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {/*-----------------------------------------------------------*/
+                    /* MODIFIED DATA VIEW 2 HEADER BACK BUTTON */
+                    /*-----------------------------------------------------------*/}
+                    <button
+                      onClick={() => setDetailedRow(null)}
+                      className="p-1 rounded-lg text-light-text2/30 dark:text-dark-text2 hover:text-icon-bg dark:hover:text-icon_dark-bg hover:bg-light-hover dark:hover:bg-dark-hover transition-colors"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    {/*-----------------------------------------------------------*/
+                    /* MODIFIED DATA VIEW 2 HEADER LABELS TEXT */
+                    /*-----------------------------------------------------------*/}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-light-text2 dark:text-dark-text2">
+                        Row
+                      </span>
+                      <span
+                        className="text-[12px] font-mono font-bold px-1 py-0.25 rounded-[4px] bg-icon-50 dark:bg-icon_dark-50 
+                            border border-light-border dark:border-dark-border text-icon-bg dark:text-icon_dark-bg shadow-sm"
+                      >
+                        {Number(detailedRow) + 1}
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                </div>
 
-          {/* ── Save / Discard ── */}
-          <div className="mt-auto flex flex-col gap-2 pt-1">
-            <CustomButton
-              label={
-                editCount > 0
-                  ? `Save (${editCount}) Change${editCount > 1 ? "s" : ""}`
-                  : "No Changes"
-              }
-              disabled={editCount === 0}
-              onClick={onSave}
-              btn_bg_color={`
-        inline-flex items-center justify-center w-full
-        h-[38px] px-3 rounded-md text-sm font-semibold tracking-wide
-        bg-button-primary hover:bg-button-primary-hover
-        text-white transition-all duration-150
-        disabled:opacity-30 disabled:cursor-not-allowed
-        shadow-sm
-      `}
-            />
-            <CustomButton
-              label="Discard All"
-              disabled={editCount === 0}
-              onClick={onDiscardAll}
-              btn_bg_color={`
-        inline-flex items-center justify-center w-full
-        h-[34px] px-3 rounded-md text-xs font-medium
-        border border-red-300/50 dark:border-red-700/40
-        text-red-500 dark:text-red-400
-        hover:bg-red-50 dark:hover:bg-red-900/20
-        hover:border-red-400 dark:hover:border-red-600
-        disabled:opacity-30 disabled:cursor-not-allowed
-        transition-all duration-150
-      `}
-            />
+                {/*-----------------------------------------------------------*/
+                /* MODIFIED DATA VIEW 2 DATA LIST */
+                /*-----------------------------------------------------------*/}
+                <div className="flex-1 bg-light-card1 dark:bg-dark-card1 overflow-y-auto custom-scroll p-3 space-y-4">
+                  {EditedDatas[detailedRow]?.map((colIdx) => {
+                    const cellKey = `${detailedRow}:${colIdx}`;
+                    const newValue = editedCells[cellKey];
+                    const oldValue = getOriginalValue?.(
+                      Number(detailedRow),
+                      colIdx,
+                    );
+
+                    return (
+                      <div
+                        key={cellKey}
+                        className="rounded-2xl bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border shadow-sm overflow-hidden hover:border-icon-bg dark:hover:border-icon_dark-bg transition-all group"
+                      >
+                        {/*-----------------------------------------------------------*/
+                        /* MODIFIED DATA VIEW 2 DATA LIST HEADER */
+                        /*-----------------------------------------------------------*/}
+                        <div
+                          className="flex items-center justify-between  p-3 cursor-pointer bg-light-card1 dark:bg-dark-card1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedCells((prev) => ({
+                              ...prev,
+                              [cellKey]: !prev[cellKey],
+                            }));
+                          }}
+                        >
+                          {/*-----------------------------------------------------------*/
+                          /* MODIFIED DATA VIEW 2 DATA LIST ICONS */
+                          /*-----------------------------------------------------------*/}
+                          <div className="flex items-center gap-2">
+                            <ChevronLeft
+                              size={14}
+                              className={`text-light-text2/30 dark:text-dark-text2 transition-transform duration-200 ${
+                                expandedCells[cellKey]
+                                  ? "-rotate-90"
+                                  : "rotate-180"
+                              }`}
+                            />
+                            <span className="text-[11px] font-mono font-bold text-icon-bg dark:text-icon_dark-bg bg-icon-50 dark:bg-icon_dark-700 px-2.5 py-1 rounded-lg border border-light-border dark:border-dark-border">
+                              {getExcelColumnName(colIdx)}
+                              {Number(detailedRow) + 1}
+                            </span>
+                            {!expandedCells[cellKey] && (
+                              <span className="text-[10px] max-w-[100px] italic text-light-text1 dark:text-dark-text1 bg-light-card2 dark:bg-dark-card2 px-1.5 py-0.5 roun rounded-[4px] border border-light-border dark:border-dark-border shadow-sm truncate">
+                                {newValue || (
+                                  <span className="italic opacity-30 text-[10px]">
+                                    {
+                                      DataEditor_Modified_Data_Label.empty_label
+                                        .label
+                                    }
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+
+                          {/*-----------------------------------------------------------*/
+                          /* MODIFIED DATA VIEW 2 DATA LIST DELETE AND REVERT BUTTON */
+                          /*-----------------------------------------------------------*/}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onRevertSpecificCell?.(
+                                  Number(detailedRow),
+                                  colIdx,
+                                );
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-50 text-red-600 dark:text-red-400 text-[10px] font-bold uppercase hover:bg-red-100 dark:hover:bg-red-900/20 transition-all border border-red-100 dark:border-red-900/20 shadow-sm"
+                            >
+                              <Undo2 size={12} strokeWidth={2.5} />
+                              {
+                                DataEditor_Modified_Data_Label.revert_label
+                                  .label
+                              }
+                            </button>
+                          </div>
+                        </div>
+
+                        {/*-----------------------------------------------------------*/
+                        /* MODIFIED DATA VIEW 2 DATA EXPANDED DATA */
+                        /*-----------------------------------------------------------*/}
+                        {expandedCells[cellKey] && (
+                          <div
+                            className="px-4 pb-4 pt-1 space-y-3 bg-light-card1 dark:bg-dark-card1 border-t border-light-border dark:border-dark-border cursor-pointer"
+                            onClick={() => {
+                              onCellSelect?.(
+                                Number(detailedRow),
+                                colIdx,
+                                newValue,
+                              );
+                              setDetailedRow(null);
+                              setActiveTab("cell");
+                            }}
+                          >
+                            <div className="grid grid-cols-2 gap-3 mt-[2px]">
+                              {/*-----------------------------------------------------------*/
+                              /* MODIFIED DATA VIEW 2 EXPANDED DATA - ORIGINAL VALUE */
+                              /*-----------------------------------------------------------*/}
+                              <div className="flex flex-col gap-1.5">
+                                <span className="text-[9px] uppercase ml-[2px] font-bold text-light-text_muted dark:text-dark-text_muted tracking-wider">
+                                  {
+                                    DataEditor_Modified_Data_Label
+                                      .original_label.label
+                                  }
+                                </span>
+                                <div className="flex items-center px-3 py-2 bg-input-light-background_hover dark:bg-input-dark-background_hover rounded-xl border border-light-border dark:border-dark-border min-h-[40px]">
+                                  <p className="text-[11px] text-light-text2 dark:text-dark-text2 font-medium break-words italic">
+                                    {oldValue || (
+                                      <span className="italic opacity-30 text-[10px]">
+                                        {
+                                          DataEditor_Modified_Data_Label
+                                            .empty_label.label
+                                        }
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                              {/*-----------------------------------------------------------*/
+                              /* MODIFIED DATA VIEW 2 EXPANDED DATA - UPDATED VALUE */
+                              /*-----------------------------------------------------------*/}
+                              <div className="flex flex-col gap-1.5">
+                                <span className="text-[9px] uppercase w-fit ml-[2px] px-[4px] py-0.5 bg-light-card1 dark:bg-dark-card1 rounded-md border border-light-border dark:border-dark-border font-bold text-icon-bg dark:text-icon_dark-bg tracking-wider">
+                                  {
+                                    DataEditor_Modified_Data_Label.updated_label
+                                      .label
+                                  }
+                                </span>
+                                <div className="flex items-center px-3 py-2 bg-light-card1 dark:bg-dark-card1 rounded-xl border border-light-border dark:border-dark-border min-h-[40px]">
+                                  <p className="text-[11px] text-light-text1 dark:text-dark-text1 font-bold break-words">
+                                    {newValue || (
+                                      <span className="italic opacity-30 text-[10px]">
+                                        {
+                                          DataEditor_Modified_Data_Label
+                                            .empty_label.label
+                                        }
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════
-          TAB 2 — HEADER COLUMN FIELDS
-      ══════════════════════════════════════════════ */}
+      {/*-----------------------------------------------------------*/
+       /* FIELDS TAB SECTION */
+       /*-----------------------------------------------------------*/}
       {activeTab === "fields" && (
-        <div className="flex flex-col gap-3 flex-1 min-h-0">
+        <div className="flex flex-col gap-4 flex-1 min-h-0">
           {headerColumns.length === 0 ? (
-            /* Empty state */
-            <div className="flex flex-col items-center justify-center flex-1 gap-2 text-center py-8">
-              <div className="w-10 h-10 rounded-full bg-light-card1 dark:bg-dark-card2 flex items-center justify-center">
-                <TableIcon className="w-5 h-5 text-light-text_muted dark:text-dark-text_muted" />
+            /*-----------------------------------------------------------*/
+            /* DEFAULT FIELD CONTAINER */
+            /*-----------------------------------------------------------*/
+            <div className="flex flex-col items-center bg-light-card1 dark:bg-dark-card1 justify-center border border-light-border_strong dark:border-dark-border_strong rounded-2xl flex-1 gap-3 py-10 opacity-70">
+              <TableIcon
+                size={40}
+                className="text-light-text_muted dark:text-dark-text_muted"
+              />
+              <div className="text-center">
+                <p className="text-sm font-bold text-light-text dark:text-dark-text">
+                  {DataEditor_Fields_Label.no_fields_detected.label}
+                </p>
+                <p className="text-xs text-light-text_secondary dark:text-dark-text_secondary">
+                  {DataEditor_Fields_Label.configure_sheet_settings.label}
+                </p>
               </div>
-              <p className="text-sm text-light-text_muted dark:text-dark-text_muted">
-                No header columns configured.
-              </p>
-              <p className="text-xs text-light-text_muted dark:text-dark-text_muted opacity-70">
-                Save your form data first to generate fields.
-              </p>
             </div>
           ) : (
-            <>
-              <p className="text-xs text-light-text_muted dark:text-dark-text_muted tracking-wide uppercase font-medium">
-                Fields derived from header row
-              </p>
-
-              <div className="mb-12 overflow-y-auto custom-scroll flex-1 space-y-2 pr-1">
-                {headerColumns.map(({ key, label }, index) => (
-                  <div
-                    key={key}
-                    className="group relative rounded-lg border border-light-border dark:border-dark-border bg-light-card1 dark:bg-dark-card1 hover:border-icon-500/40 dark:hover:border-icon_dark-500/40 transition-all duration-200 overflow-hidden"
-                  >
-                    {/* Left accent bar */}
-                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-icon-500/30 dark:bg-icon_dark-500/30 group-hover:bg-icon-500 dark:group-hover:bg-icon_dark-500 transition-colors duration-200" />
-
-                    <div className="pl-4 pr-3 py-2.5 flex items-center gap-3">
-                      {/* Index number */}
-                      <span
-                        title={index + 1}
-                        className="shrink-0 text-[10px] font-mono w-5 text-center text-light-text_muted dark:text-dark-text_muted opacity-50"
-                      >
-                        {index + 1}
-                      </span>
-
-                      {/* Field ID */}
-                      <div className="flex flex-col min-w-0 w-[38%] shrink-0">
-                        <span
-                          title={DataEditor_Label.field_id_label.label}
-                          className="text-[9px] uppercase tracking-widest text-light-text_muted dark:text-dark-text_muted mb-0.5"
-                        >
-                          {DataEditor_Label.field_id_label.label}
-                        </span>
-                        <span
-                          title={key}
-                          className="text-[11px] font-mono text-icon-500 dark:text-icon_dark-500 truncate select-all bg-icon-bg/10 dark:bg-icon_dark-bg/20 px-1.5 py-0.5 rounded border border-icon-bg/20 dark:border-icon_dark-bg/20"
-                        >
-                          {key}
-                        </span>
-                      </div>
-
-                      {/* Divider */}
-                      <div className="shrink-0 flex flex-col items-center gap-0.5 opacity-30">
-                        <div className="w-px h-2 bg-light-border dark:bg-dark-border" />
-                        <span className="text-[9px] text-light-text_muted dark:text-dark-text_muted">
-                          <ArrowRightSquareIcon className="w-5 h-5" />
-                        </span>
-                        <div className="w-px h-2 bg-light-border dark:bg-dark-border" />
-                      </div>
-
-                      {/* Header value */}
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span
-                          title={DataEditor_Label.header_id_label.label}
-                          className="text-[9px] uppercase tracking-widest text-light-text_muted dark:text-dark-text_muted mb-0.5"
-                        >
-                          {DataEditor_Label.header_id_label.label}
-                        </span>
+            /*-----------------------------------------------------------*/
+            /* FIELD ITEMS CONTAINER */
+            /*-----------------------------------------------------------*/
+            <div className="overflow-y-auto custom-scroll flex-1 space-y-2 pr-1 pb-20">
+              {headerColumns.map(({ key, label }, index) => (
+                <div
+                  key={key}
+                  className="p-3 rounded-2xl bg-light-card1 dark:bg-dark-card1 border border-light-border dark:border-dark-border shadow-sm hover:shadow-md hover:border-icon-bg dark:hover:border-icon_dark-bg transition-all duration-200 overflow-hidden"
+                >
+                  <div className="flex items-center gap-3">
+                    {/*-----------------------------------------------------------*/
+                    /* FIELD INDEX COUNT BADGE */
+                    /*-----------------------------------------------------------*/}
+                    <div className="shrink-0 w-8 h-8 rounded-xl bg-icon-50 dark:bg-icon_dark-700/10 text-icon-bg dark:text-icon_dark-bg flex items-center justify-center text-xs font-bold border border-icon-bg/20 dark:border-icon_dark-bg/20 ">
+                      {index + 1}
+                    </div>
+                    {/*-----------------------------------------------------------*/
+                    /* FIELD ITEMS SECTION */
+                    /*-----------------------------------------------------------*/}
+                    <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 w-full bg-light-card3 dark:bg-dark-card3 p-2 rounded-lg border border-light-border dark:border-dark-border">
+                        {/*-----------------------------------------------------------*/
+                        /* FIELD LABEL */
+                        /*-----------------------------------------------------------*/}
                         <span
                           title={label}
-                          className="text-[12px] font-medium text-light-text dark:text-dark-text truncate select-all"
+                          className="text-[10px] font-bold text-light-text dark:text-dark-text leading-tight truncate"
                         >
                           {label}
                         </span>
+                        {/*-----------------------------------------------------------*/
+                        /* FIELD ARROW ICON */
+                        /*-----------------------------------------------------------*/}
+                        <div className="flex items-center justify-center text-icon-bg dark:text-icon_dark-bg">
+                          <ArrowRight size={14} strokeWidth={2.5} />
+                        </div>
+                        {/*-----------------------------------------------------------*/
+                        /* FIELD ID LABEL */
+                        /*-----------------------------------------------------------*/}
+                        <div className="flex items-center min-w-0">
+                          <span
+                            title={`${key.split("_")[0]}_${label
+                              .replace(/[^a-zA-Z0-9 ]/g, "")
+                              .trim()
+                              .replace(/\s+/g, "_")}`}
+                            className="text-[10px] w-full font-mono font-bold text-icon-bg dark:text-icon_dark-bg bg-light-card1 dark:bg-dark-card1 px-2 py-1 rounded-md border border-light-border dark:border-dark-border truncate shadow-sm max-w-full"
+                          >
+                            ID: {key.split("_")[0]}_
+                            {label
+                              .replace(/[^a-zA-Z0-9 ]/g, "")
+                              .trim()
+                              .replace(/\s+/g, "_")}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </>
+                </div>
+              ))}
+              {/* Spacer to ensure the last item is fully scrollable */}
+              <div className="h-10 w-full" aria-hidden="true" />
+            </div>
           )}
         </div>
       )}
@@ -1776,67 +2364,141 @@ const EditorPanel = memo(function EditorPanel({
  * @function  BackButton => COMPONENT
  * @purpose   To go to back path
  */
-const BackButton = ({ path }) => {
+const BackButton = ({ path, onClick }) => {
   const navigate = useNavigate();
+
+  const handleClick = (e) => {
+    if (onClick) {
+      onClick(e);
+    } else {
+      navigate(path);
+    }
+  };
 
   return (
     <button
-      onClick={() => navigate(path)}
+      onClick={handleClick}
       title="Back"
       className="
         group
-        inline-flex items-center gap-1.5
-        px-3 py-2
-        w-fit h-fit
-        rounded-xl
-        cursor-pointer
-        select-none
-
-        bg-light-card1
-        border border-light-border
-        shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.04)]
-
-        dark:bg-dark-card1
-        dark:border-dark-border
-        dark:shadow-[0_1px_3px_rgba(0,0,0,0.4),0_1px_2px_rgba(0,0,0,0.3)]
-
-        hover:bg-light-hover
-        hover:border-light-border_strong
-        dark:hover:bg-dark-hover
-        dark:hover:border-dark-border_strong
-
-        active:scale-[0.96]
-        active:bg-light-active
-        dark:active:bg-dark-active
-
-        transition-all duration-150 ease-out
+        relative
+        inline-flex items-center justify-center
+        p-1.5
+        rounded-lg
+        transition-all duration-300 ease-in-out
+        bg-light-card1 dark:bg-dark-card1
+        hover:bg-icon-bg dark:hover:bg-icon_dark-bg
+        text-icon-bg dark:text-icon_dark-bg hover:text-white dark:hover:text-white
+        border border-light-border dark:border-dark-border
+        active:scale-90
+        shadow-sm hover:shadow-md
       "
     >
       <ChevronLeft
         size={16}
-        strokeWidth={2.2}
-        className="
-          text-icon-bg
-          dark:text-icon_dark-bg
-          transition-transform duration-150 ease-out
-          group-hover:-translate-x-0.5
-        "
+        strokeWidth={3}
+        className="transition-transform duration-300 group-hover:-translate-x-1"
       />
-      <span
-        className="
-        text-sm font-dm font-medium tracking-tight leading-none
-        text-light-label1
-        dark:text-dark-label1
-      "
-      >
-        {DataEditor_Label.back_label.label}
-      </span>
     </button>
   );
 };
 /*--------------------------------------------------------------- */
 
+/**
+ * @function  DiscardChangesModal => COMPONENT
+ * @purpose   To show confirmation for unsaved changes
+ */
+const DiscardChangesModal = ({
+  isOpen,
+  onClose,
+  onDiscard,
+  onSave,
+  sheetsWithEdits,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-light-card dark:bg-dark-card w-full max-w-md p-6 rounded-2xl shadow-2xl border border-light-border dark:border-dark-border overflow-hidden animate-in zoom-in-95 duration-300">
+        {/*-----------------------------------------------------------*/
+         /* DISCARD HEADER SECTION */
+         /*-----------------------------------------------------------*/}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
+              <AlertCircle size={16} />
+            </div>
+            <div className="text-lg font-bold text-light-text dark:text-dark-text">
+              {DataEditor_Discard_Label.unsaved_changes.label}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg text-light-text  dark:text-dark-text hover:bg-light-hover dark:hover:bg-dark-hover transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        {/*-----------------------------------------------------------*/
+         /* DISCARD MESSAGE SECTION */
+         /*-----------------------------------------------------------*/}
+        <p className="text-sm text-light-text2 dark:text-dark-text2 mb-6 leading-relaxed">
+          {DataEditor_Discard_Label.descption_message.label}
+        </p>
+        {/*-----------------------------------------------------------*/
+         /* DISCARD CHANGES SHEETS SECTION */
+         /*-----------------------------------------------------------*/}
+        <div className="space-y-2 mb-6 max-h-40 overflow-y-auto custom-scroll pr-2">
+          {sheetsWithEdits.map((sheet) => (
+            <div
+              key={sheet.name}
+              className="flex items-center justify-between p-3 rounded-xl bg-light-card1 dark:bg-dark-card1 border border-light-border dark:border-dark-border"
+            >
+              <div className="flex items-center gap-2">
+                <TableIcon size={14} className="text-icon-bg dark:text-icon_dark-bg" />
+                <span className="text-xs font-bold text-light-text dark:text-dark-text">
+                  {sheet.name}
+                </span>
+              </div>
+              <span className="flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-icon-50 dark:bg-icon_dark-700 text-icon-bg dark:text-icon_dark-bg tracking-tighter">
+                <span>{sheet.count}</span>
+                <span>{sheet.count === 1 ? "Edit" : "Edits"}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+        {/*-----------------------------------------------------------*/
+         /* DISCARD ACTION BUTTONS SECTION */
+         /*-----------------------------------------------------------*/}
+        <div className="flex flex-row w-full gap-3">
+          {/*-----------------------------------------------------------*/
+           /* DISCARD ACTION DISCARD BUTTON */
+           /*-----------------------------------------------------------*/}
+          <button
+            onClick={onDiscard}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 font-bold text-sm transition-all duration-200 active:scale-[0.98]"
+          >
+            <Trash2 size={18} />
+            {DataEditor_Discard_Label.discard_all_label.label}
+          </button>
+          {/*-----------------------------------------------------------*/
+           /* DISCARD ACTION SAVE BUTTON */
+           /*-----------------------------------------------------------*/}
+          <button
+            onClick={onSave}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-button-primary text-white hover:bg-button-primary-hover font-bold text-sm transition-all duration-200 shadow-lg shadow-icon-500/20 active:scale-[0.98]"
+          >
+            <Save size={18} />
+            {DataEditor_Discard_Label.save_changes_label.label}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /*--------------------------------------------------------------- */
+
 /**
  * @function  DataEditor => COMPONENT
  * @purpose   To Make a view of DATA EDITOR SECTION
@@ -1856,6 +2518,46 @@ const DataEditor = () => {
   const [fileData, setFileData] = useState(null);
   const [fileID, setFileID] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+  const [sheetsWithEdits, setSheetsWithEdits] = useState([]);
+  const [pendingSheetNames, setPendingSheetNames] = useState([]);
+
+  const gridRef = useRef(null);
+  const navigate = useNavigate();
+
+  /*-----------------------------------------------------------*/
+  /* HANDEL BACK BUTTON */
+  /*-----------------------------------------------------------*/
+  const handleBackClick = () => {
+    if (hasUnsavedChanges) {
+      const sheets = gridRef.current?.getSheetsWithEdits() || [];
+      setSheetsWithEdits(sheets);
+      setShowDiscardModal(true);
+    } else {
+      navigate("/data");
+    }
+  };
+
+  /*-----------------------------------------------------------*/
+  /* HANDEL SAVE ALL AND EXIT BUTTON */
+  /*-----------------------------------------------------------*/
+  const handleSaveAllAndExit = async () => {
+    const success = await gridRef.current?.saveAll();
+    if (success) {
+      setShowDiscardModal(false);
+      navigate("/data");
+    }
+  };
+
+  /*-----------------------------------------------------------*/
+  /* HANDEL DISCARD ALL AND EXIT BUTTON */
+  /*-----------------------------------------------------------*/
+  const handleDiscardAllAndExit = () => {
+    gridRef.current?.discardAll();
+    setShowDiscardModal(false);
+    navigate("/data");
+  };
 
   /*-----------------------------------------------------------*/
   /* TOAST MESSAGE CALLBACK CREATION */
@@ -1922,20 +2624,23 @@ const DataEditor = () => {
       /* HEADER SECTION */
       /*-----------------------------------------------------------*/}
       {!loading && (
-        <div className="flex flex-row justify-start items-center gap-3">
-          <BackButton path={"/data"} />
-
-          <div
-            className="w-fit h-fit 
-          bg-card dark:bg-dark-card
-          p-[6px] shadow-[0_2px_6px_rgba(200,200,200,0.5)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.5)]
-          border-l-[4px] border-l-icon-bg
-          rounded-[4px] "
-          >
-            <CustomLabel
-              label_text={`${fileData?.name ?? DataEditor_Label.header_label.label}`}
-              label_style="text-[16px] font-semibold tracking-wide text-light-text dark:text-dark-text"
-            />
+        <div className="flex flex-row items-center gap-4 mb-6 animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border shadow-sm">
+              <BackButton path={"/data"} onClick={handleBackClick} />
+              <div className="w-[1.6px] h-[20px] rounded-full bg-light-border_strong dark:bg-dark-border_strong"></div>
+              <div className="p-2 rounded-lg bg-icon-bg dark:bg-icon_dark-bg text-dark-text">
+                <FileText size={16} />
+              </div>
+              <div className="flex">
+                <div
+                  title={fileData?.name}
+                  className="text-[14px] font-bold text-light-text dark:text-dark-text truncate max-w-[200px]"
+                >
+                  {fileData?.name}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1944,8 +2649,8 @@ const DataEditor = () => {
       /* EXCEL SHEETS SELECT SECTION */
       /*-----------------------------------------------------------*/}
       {totalSheets > 0 && (
-        <div className="mt-4 overflow-x-auto custom-scroll">
-          <div className="flex items-center gap-1 min-w-max">
+        <div className="mt-6 mb-4 overflow-x-auto custom-scroll no-scrollbar">
+          <div className="flex items-center gap-1.5 p-1.5 w-fit rounded-xl bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border ">
             {sheets.map((name, index) => {
               const isActive = activeSheet === index;
               return (
@@ -1956,21 +2661,26 @@ const DataEditor = () => {
                     setActiveSheetName(name);
                   }}
                   className={`
-                      px-4 py-2 text-sm font-medium
-                      border-t border-l border-r
-                      rounded-t-md
-                      transition-colors
-                      border-light-border dark:border-dark-border
-                      bg-light-card dark:bg-dark-card
-                      hover:bg-light-hover dark:hover:bg-dark-hover
-                      ${
-                        isActive
-                          ? "text-icon-seleceted_text dark:text-icon_dark-bg font-extrabold"
-                          : "text-light-text_muted dark:text-dark-text_muted"
-                      }
+                    relative flex items-center gap-2 px-2 py-2 rounded-lg text-[10px] font-black transition-all duration-300
+                    ${
+                      isActive
+                        ? "bg-light-card1 dark:bg-dark-card1 text-icon-bg shadow-lg scale-[1.02] ring-1 ring-light-border dark:ring-dark-border"
+                        : "text-light-label2 dark:text-dark-label2  hover:text-light-text dark:hover:text-dark-text hover:bg-light-border_strong dark:hover:bg-dark-border_strong"
+                    }
                   `}
                 >
-                  {name}
+                  <span className="whitespace-nowrap uppercase tracking-[0.15em]">
+                    {name}
+                  </span>
+                  {pendingSheetNames.includes(name) && (
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-bounce-soft shadow-[0_0_8px_rgba(249,115,22,0.5)]"
+                      title="Pending changes"
+                    />
+                  )}
+                  {isActive && (
+                    <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-icon-bg rounded-full" />
+                  )}
                 </button>
               );
             })}
@@ -2045,17 +2755,32 @@ const DataEditor = () => {
           </div>
         </div>
       )}
+
       {/*-----------------------------------------------------------*/
       /* EXCEL GRID SECTION */
       /*-----------------------------------------------------------*/}
       {!loading && sheetData[activesheetName] && (
         <ExcelGridContainer
+          ref={gridRef}
           grid={sheetData[activesheetName]}
           gridFileID={fileID}
           SheetNameSelected={activesheetName}
-          ToastMessage={showToastMessage}
+          ToastMessage={addToast}
+          onEditsChange={setHasUnsavedChanges}
+          onSheetsWithEditsChange={setPendingSheetNames}
         />
       )}
+
+      {/*-----------------------------------------------------------*/
+      /* DISCARD CHANGES MODAL */
+      /*-----------------------------------------------------------*/}
+      <DiscardChangesModal
+        isOpen={showDiscardModal}
+        onClose={() => setShowDiscardModal(false)}
+        onSave={handleSaveAllAndExit}
+        onDiscard={handleDiscardAllAndExit}
+        sheetsWithEdits={sheetsWithEdits}
+      />
     </div>
   );
 };

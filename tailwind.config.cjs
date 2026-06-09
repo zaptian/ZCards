@@ -131,6 +131,7 @@ module.exports = {
           /* New semantic tokens */
           card1: "#ffffff",
           card2: "#f3f4f6",
+          card3: "#e5e7eb",
           label1: "#374151",
           label2: "#6b7280",
           text1: "#111827",
@@ -155,6 +156,7 @@ module.exports = {
           /* New semantic tokens */
           card1: "#1d1e20",
           card2: "#242526",
+          card3: "#2f3133",
           label1: "#e2e8f0",
           label2: "#94a3b8",
           text1: "#f8fafc",

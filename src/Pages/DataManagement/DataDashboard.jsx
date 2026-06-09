@@ -337,19 +337,17 @@ const DataDashboard = () => {
   /* ------------------------------------------------------------------------------ */
 
   return (
-    /* Data DashBoard */
     <div className="w-full p-3 h-[calc(100vh-50px)] overflow-y-auto custom-scroll bg-light-bg dark:bg-dark-bg">
-      {/* Left Files Panel */}
       <div>
         {/* Header Panel */}
         <div className="flex justify-between h-[50px]">
           {/* Heading Label */}
           <div
             className="h-fit 
-          bg-card dark:bg-dark-card
-          p-[6px] shadow-[0_2px_6px_rgba(200,200,200,0.5)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.5)]
-          border-l-[4px] border-l-icon-bg
-          rounded-[4px]"
+           bg-card dark:bg-dark-card
+           p-[6px] shadow-[0_2px_6px_rgba(200,200,200,0.5)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.5)]
+           border-l-[4px] border-l-icon-bg
+           rounded-[4px]"
           >
             <CustomLabel
               label_text={Data_Management_Label.Data_Management.label}
@@ -682,7 +680,6 @@ const DataDashboard = () => {
               </div>
 
               {/* File Management List */}
-
               <div className="flex flex-col min-h-[600px] max-h-[680px] my-[20px] custom-scroll overflow-y-auto">
                 {/* Table Header Panel */}
                 <div
